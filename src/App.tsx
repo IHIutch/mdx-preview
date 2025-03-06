@@ -1,71 +1,26 @@
-import React, { Fragment, useState } from 'react';
+import React, { createElement, useState } from 'react';
 import { Split, FileText, Eye } from 'lucide-react';
-import * as mdx from '@mdx-js/mdx';
 import * as runtime from 'react/jsx-runtime';
-import type { MDXModule } from 'mdx/types.js';
 import remarkGfm from 'remark-gfm';
+import { compile, run } from '@mdx-js/mdx';
+import { renderToString } from 'react-dom/server';
+import remarkSmartypants from 'remark-smartypants';
 
 // Custom component example
 function InfoBox({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-      <div className="flex items-center text-blue-800">
-        <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-          <path
-            fillRule="evenodd"
-            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-            clipRule="evenodd"
-          />
-        </svg>
-        {children}
+    <div className="usa-alert usa-alert--info">
+      <div className="usa-alert__body">
+        <h4 className="usa-alert__heading">Informative status</h4>
+        <p className="usa-alert__text">
+          {children}
+        </p>
       </div>
     </div>
   );
 }
 
 const components = {
-  h1: (props: any) => <h1 className="text-4xl font-bold mb-4" {...props} />,
-  h2: (props: any) => <h2 className="text-3xl font-semibold mb-3" {...props} />,
-  h3: (props: any) => <h3 className="text-2xl font-semibold mb-2" {...props} />,
-  p: (props: any) => <p className="mb-4" {...props} />,
-  code: (props: any) => (
-    <code className="bg-gray-100 rounded px-1" {...props} />
-  ),
-  pre: (props: any) => (
-    <pre
-      className="bg-gray-100 p-4 rounded-lg mb-4 overflow-x-auto"
-      {...props}
-    />
-  ),
-  a: (props: any) => <a className="text-blue-600 hover:underline" {...props} />,
-  ul: (props: any) => <ul className="list-disc list-inside mb-4" {...props} />,
-  ol: (props: any) => (
-    <ol className="list-decimal list-inside mb-4" {...props} />
-  ),
-  li: (props: any) => <li className="mb-1" {...props} />,
-  blockquote: (props: any) => (
-    <blockquote
-      className="border-l-4 border-gray-200 pl-4 italic my-4"
-      {...props}
-    />
-  ),
-  table: (props: any) => (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200 my-4" {...props} />
-    </div>
-  ),
-  th: (props: any) => (
-    <th
-      className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-      {...props}
-    />
-  ),
-  td: (props: any) => (
-    <td
-      className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-      {...props}
-    />
-  ),
   InfoBox,
 };
 
@@ -81,9 +36,7 @@ const initialMarkdown = `# Welcome to the MDX Editor!
 Try editing this markdown on the left side!
 
 ### Custom Components Example
-<InfoBox>
-  This is a custom component rendered in MDX!
-</InfoBox>
+<InfoBox>This is a custom component rendered in MDX!</InfoBox>
 
 ### Code Example
 \`\`\`javascript
@@ -103,44 +56,40 @@ function hello() {
 function App() {
   const [markdown, setMarkdown] = useState(initialMarkdown);
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
-  const [compiledJSX, setCompiledJSX] = useState<MDXModule | null>(null);
+  const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
+
   const [error, setError] = useState<string | null>(null);
 
-  const Content = compiledJSX ? compiledJSX.default : Fragment;
+  const compileMarkdown = React.useCallback(async () => {
+    try {
+      setError(null);
+      const code = await compile(markdown, {
+        outputFormat: 'function-body',
+        remarkPlugins: [remarkGfm, remarkSmartypants],
+      });
+
+      const result = await run(code, {
+        ...runtime,
+        baseUrl: import.meta.url,
+      });
+
+      const iframeEl = iframeRef.current;
+      if (iframeEl && iframeEl.contentDocument) {
+        const contentDiv = iframeEl.contentDocument.getElementById('content');
+        if (contentDiv) {
+          contentDiv.innerHTML = renderToString(createElement(result.default, { components })) || '';
+        }
+      }
+
+    } catch (err) {
+      console.error('Failed to compile MDX:', err);
+      setError(err instanceof Error ? err.message : 'Failed to compile MDX');
+    }
+  }, [markdown]);
 
   React.useEffect(() => {
-    const compileMarkdown = async () => {
-      try {
-        setError(null);
-        const code = await mdx.compile(markdown, {
-          outputFormat: 'function-body',
-          remarkPlugins: [remarkGfm],
-        });
-
-        const result = await mdx.run(code, {
-          ...runtime,
-          baseUrl: import.meta.url,
-        });
-
-        // const code = String(compiled);
-        // const scope = { ...runtime, components, React };
-        // console.log({ scope });
-        // const fn = new Function(
-        //   ...Object.keys(scope),
-        //   `return (() => { ${code} })()`
-        // );
-        // const Content = fn(...Object.values(scope)).default;
-
-        setCompiledJSX(result);
-      } catch (err) {
-        console.error('Failed to compile MDX:', err);
-        setError(err instanceof Error ? err.message : 'Failed to compile MDX');
-        setCompiledJSX(null);
-      }
-    };
-
     compileMarkdown();
-  }, [markdown]);
+  }, [compileMarkdown]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -192,23 +141,37 @@ function App() {
           {/* Preview */}
           {isPreviewVisible && (
             <div className="flex-1 w-1/2">
-              <div className="h-full overflow-auto border border-gray-300 rounded-lg bg-white p-8">
-                <div className="prose max-w-none">
-                  {error ? (
-                    <div className="text-red-500 p-4 border border-red-200 rounded-lg bg-red-50">
-                      <p className="font-medium">Error:</p>
-                      <pre className="mt-2 text-sm whitespace-pre-wrap">
-                        {error}
-                      </pre>
-                    </div>
-                  ) : (
-                    // <MDXProvider components={components}>
-                    <Content components={components} />
-                    // </MDXProvider>
-                  )}
+              <div className="h-full overflow-auto border border-gray-300 rounded-lg bg-white relative">
+                    {error ? (
+                      <div className="text-red-500 p-4 border border-red-200 rounded-lg bg-red-50 top-4 inset-x-4 absolute z-10">
+                        <p className="font-medium">Error:</p>
+                        <pre className="mt-2 text-sm whitespace-pre-wrap">
+                          {error}
+                        </pre>
+                      </div>
+                    ) : null}
+                    <iframe
+                      ref={iframeRef}
+                      onLoad={compileMarkdown}
+                      srcDoc={`
+                        <!DOCTYPE html>
+                        <html lang="en">
+                          <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <title>MDX Preview</title>
+                            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uswds/3.11.0/css/uswds.min.css" integrity="sha512-Hc40xGRxbM2Ihz8tDtmRmhHtAzGzlpaHIwOniSb8ClzBIe5mTrW5EEG552LBrp1gELfd+iXJzAtGEUGEvs77NA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+                          </head>
+                          <body class="prose max-w-none">
+                            <div id="content" class="padding-4 usa-prose"></div>
+                          </body>
+                        </html>
+                      `}
+                      title="MDX Preview"
+                      className="w-full h-full border-none"
+                    />
                 </div>
               </div>
-            </div>
           )}
         </div>
       </main>
