@@ -6,10 +6,15 @@
   "scripts": {
     "dev": "vinxi dev",
     "build": "vinxi build",
-    "start": "vinxi start"
+    "start": "vinxi start",
+    "prisma": "prisma"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.1",
     "@mdx-js/mdx": "^3.1.0",
+    "@prisma/adapter-libsql": "^6.5.0",
+    "@prisma/client": "^6.5.0",
+    "@t3-oss/env-core": "^0.12.0",
     "@tailwindcss/postcss": "^4.0.17",
     "@tanstack/react-router": "^1.114.29",
     "@tanstack/react-router-devtools": "^1.114.29",
@@ -17,13 +22,16 @@
     "dexie": "^4.0.11",
     "dexie-react-hooks": "^1.1.7",
     "nanoid": "^5.1.5",
+    "prisma": "^6.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "redaxios": "^0.5.1",
     "remark-gfm": "^4.0.1",
     "remark-smartypants": "^3.0.2",
     "tailwind-merge": "^3.0.2",
-    "vinxi": "0.5.3"
+    "vinxi": "0.5.3",
+    "vite": "^6.2.3",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^22.13.14",

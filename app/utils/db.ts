@@ -1,5 +1,4 @@
 import Dexie, { type EntityTable } from 'dexie';
-
 interface Post {
   id: number;
   content: string;
@@ -18,5 +17,6 @@ db.version(1).stores({
   posts: '++id, &publicId' // primary key "id" (for the runtime!)
 });
 
-export type { Post };
-export { db };
+export {
+  db as dexieDb,
+}

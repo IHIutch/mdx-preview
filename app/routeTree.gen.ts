@@ -11,10 +11,17 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as PublicIdImport } from './routes/$publicId'
 import { Route as IndexImport } from './routes/index'
 import { Route as PreviewPublicIdImport } from './routes/preview.$publicId'
 
 // Create/Update Routes
+
+const PublicIdRoute = PublicIdImport.update({
+  id: '/$publicId',
+  path: '/$publicId',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const IndexRoute = IndexImport.update({
   id: '/',
@@ -39,6 +46,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/$publicId': {
+      id: '/$publicId'
+      path: '/$publicId'
+      fullPath: '/$publicId'
+      preLoaderRoute: typeof PublicIdImport
+      parentRoute: typeof rootRoute
+    }
     '/preview/$publicId': {
       id: '/preview/$publicId'
       path: '/preview/$publicId'
@@ -53,36 +67,41 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$publicId': typeof PublicIdRoute
   '/preview/$publicId': typeof PreviewPublicIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$publicId': typeof PublicIdRoute
   '/preview/$publicId': typeof PreviewPublicIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/$publicId': typeof PublicIdRoute
   '/preview/$publicId': typeof PreviewPublicIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/preview/$publicId'
+  fullPaths: '/' | '/$publicId' | '/preview/$publicId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/preview/$publicId'
-  id: '__root__' | '/' | '/preview/$publicId'
+  to: '/' | '/$publicId' | '/preview/$publicId'
+  id: '__root__' | '/' | '/$publicId' | '/preview/$publicId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PublicIdRoute: typeof PublicIdRoute
   PreviewPublicIdRoute: typeof PreviewPublicIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PublicIdRoute: PublicIdRoute,
   PreviewPublicIdRoute: PreviewPublicIdRoute,
 }
 
@@ -97,11 +116,15 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/$publicId",
         "/preview/$publicId"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/$publicId": {
+      "filePath": "$publicId.tsx"
     },
     "/preview/$publicId": {
       "filePath": "preview.$publicId.tsx"

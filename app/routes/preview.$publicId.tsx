@@ -1,12 +1,25 @@
 import * as React from 'react';
 import { createFileRoute } from '@tanstack/react-router'
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '~/utils/db';
 import { compile, run } from '@mdx-js/mdx';
 import remarkSmartypants from 'remark-smartypants';
 import remarkGfm from 'remark-gfm';
 import * as runtime from 'react/jsx-runtime';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { createServerFn } from '@tanstack/react-start';
+import { prisma } from 'app/utils/prisma';
+import { dexieDb } from 'app/utils/db';
+
+const getPost = createServerFn({ method: 'GET' })
+  .validator((d: string) => d)
+  .handler(async ({ data }) => {
+    const post = await prisma.post.findFirst({
+      where: {
+        publicId: data,
+      },
+    });
+    return post;
+  })
 
 export const Route = createFileRoute('/preview/$publicId')({
   component: RouteComponent,
@@ -22,6 +35,9 @@ export const Route = createFileRoute('/preview/$publicId')({
       },
     ]
   }),
+  loader: async ({ params }) => {
+    return params.publicId ? await getPost({ data: params.publicId }) : null;
+  },
 })
 
 function RouteComponent() {
@@ -29,34 +45,38 @@ function RouteComponent() {
   const [renderedContent, setRenderedContent] = React.useState<string | null>(null);
 
   const { publicId } = Route.useParams()
-  const post = useLiveQuery(() => db.posts.where('publicId').equals(publicId).first());
+  const data = Route.useLoaderData();
+  const post = useLiveQuery(() => dexieDb.posts.where('publicId').equals(publicId).first());
 
-  const compileMarkdown = React.useCallback(async () => {
-    try {
-      setError(null);
-      const code = await compile((post?.content || ''), {
-        outputFormat: 'function-body',
-        remarkPlugins: [remarkGfm, remarkSmartypants],
-      });
-
-      const { default: MdxContent } = await run(code, {
-        ...runtime,
-        baseUrl: import.meta.url,
-      });
-
-      setRenderedContent(renderToStaticMarkup(<MdxContent components={{
-        InfoBox
-      }} />))
-
-    } catch (err) {
-      console.error('Failed to compile MDX:', err);
-      setError(err instanceof Error ? err.message : 'Failed to compile MDX');
-    }
-  }, [post?.content]);
+  console.log({ data })
 
   React.useEffect(() => {
-    compileMarkdown();
-  }, [compileMarkdown]);
+    const compileAndRender = async () => {
+      try {
+        setError(null);
+        const code = await compile((post?.content || ''), {
+          outputFormat: 'function-body',
+          remarkPlugins: [remarkGfm, remarkSmartypants],
+        });
+
+        const { default: MdxContent } = await run(code, {
+          ...runtime,
+          baseUrl: import.meta.url,
+        });
+
+        setRenderedContent(renderToStaticMarkup(<MdxContent components={{
+          InfoBox
+        }} />));
+      } catch (err) {
+        console.error('Failed to compile MDX:', err);
+        setError(err instanceof Error ? err.message : 'Failed to compile MDX');
+      }
+    };
+
+    if (post?.content) {
+      compileAndRender();
+    }
+  }, [post?.content]);
 
   return (
     <div>
@@ -68,7 +88,6 @@ function RouteComponent() {
     </div>
   );
 }
-
 
 function InfoBox({ children }: { children: React.ReactNode }) {
   return (
