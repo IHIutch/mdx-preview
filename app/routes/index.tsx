@@ -1,46 +1,14 @@
 import * as React from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { useLiveQuery } from 'dexie-react-hooks';
 import { nanoid } from 'nanoid';
-import { dexieDb } from 'app/utils/db';
 import initialContent from 'app/utils/initial-content';
 import appCss from '~/styles/app.css?url'
-import { createServerFn } from '@tanstack/react-start';
-import { prisma } from 'app/utils/prisma';
-
-export const sharePost = createServerFn({ method: 'POST' })
-  .validator((formData: FormData) => {
-    if (!(formData instanceof FormData)) {
-      throw new Error('Invalid form data')
-    }
-    const content = formData.get('content')
-
-    if (!content) {
-      throw new Error('Content is required')
-    }
-    return {
-      content: content.toString(),
-    }
-  })
-  .handler(async ({ data: { content } }) => {
-    const publicId = nanoid(10)
-    await prisma.post.create({
-      data: {
-        content,
-        publicId,
-      },
-    })
-
-    return new Response('ok', {
-      status: 301,
-      headers: {
-        Location: `/${publicId}`,
-      }
-    })
-  })
+import { useServerFn } from '@tanstack/react-start';
+import Preview from '~/components/preview';
+import { createPost } from '~/utils/server-functions';
 
 export const Route = createFileRoute('/')({
-  component: Home,
+  component: NewPreview,
   head: () => ({
     links: [
       { rel: 'stylesheet', href: appCss },
@@ -48,11 +16,10 @@ export const Route = createFileRoute('/')({
   })
 })
 
-function Home() {
+function NewPreview() {
   const [markdown, setMarkdown] = React.useState(initialContent);
   const [isPreviewVisible, setIsPreviewVisible] = React.useState(true);
-
-  const posts = useLiveQuery(() => dexieDb.posts.toArray());
+  const handleSubmit = useServerFn(createPost)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -94,15 +61,16 @@ function Home() {
         <div className="flex gap-6 h-[calc(100vh-12rem)]">
           {/* Editor */}
           <div className={`flex-1 ${isPreviewVisible ? 'w-1/2' : 'w-full'}`}>
-            <form id="editor" className="h-full" action={sharePost.url} method="POST">
+            <form id="editor" className="h-full" method="POST" onSubmit={async (e) => {
+              e.preventDefault()
+              const formData = new FormData(e.currentTarget)
+              await handleSubmit({ data: formData })
+            }}>
               <textarea
                 name="content"
                 defaultValue={markdown}
                 onChange={async (e) => {
-                  const content = (e.target as HTMLTextAreaElement).value;
-                  if (posts?.length) {
-                    await dexieDb.posts.update(posts[0].id, { content });
-                  }
+                  setMarkdown(e.target.value);
                 }}
                 className="w-full h-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white font-mono text-sm resize-none"
                 placeholder="Write your MDX here..."
@@ -112,7 +80,7 @@ function Home() {
           {/* Preview */}
           <div className="flex-1 w-1/2">
             <div className="h-full overflow-auto border border-gray-300 rounded-lg bg-white relative">
-              <iframe className="size-full" src="./preview/eGtFmOiYOv" />
+              <Preview content={markdown} />
             </div>
           </div>
         </div>

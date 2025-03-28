@@ -1,34 +1,20 @@
-import * as React from 'react'
-import { createFileRoute, notFound, useLoaderData, useParams } from '@tanstack/react-router'
-import appCss from '~/styles/app.css?url'
-import Preview from '~/components/preview';
-import { getPost, updatePost } from '~/utils/server-functions';
+import { useServerFn } from '@tanstack/react-start';
+import React from 'react'
+import initialContent from '~/utils/initial-content';
+import { createPost } from '~/utils/server-functions';
+import Preview from './preview';
+import { useLoaderData, useParams } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/$publicId')({
-    component: ExistingPreview,
-    head: () => ({
-        links: [
-            { rel: 'stylesheet', href: appCss },
-        ]
-    }),
-    loader: async ({ params }) => {
-        if (!params.publicId) {
-            throw notFound()
-        }
-        const post = await getPost({ data: params.publicId });
-        if (!post) {
-            throw notFound()
-        }
-        return {
-            post,
-        }
-    },
-})
+export default function PreviewRoute() {
+    // const params = useParams({ from: '/$publicId' })
+    const data = useLoaderData({
+        strict: false,
+        structuralSharing: true,
+    })
 
-function ExistingPreview() {
-    const data = Route.useLoaderData()
     const [isPreviewVisible, setIsPreviewVisible] = React.useState(true);
-    const [markdown, setMarkdown] = React.useState(data?.post.content);
+    const [markdown, setMarkdown] = React.useState(data?.post?.content || initialContent);
+    const handleSubmit = useServerFn(createPost)
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -73,12 +59,11 @@ function ExistingPreview() {
                         <form id="editor" className="h-full" method="POST" onSubmit={async (e) => {
                             e.preventDefault()
                             const formData = new FormData(e.currentTarget)
-                            await updatePost({ data: formData })
+                            await handleSubmit({ data: formData })
                         }}>
-                            <input type="hidden" name="publicId" value={data.post.publicId} />
                             <textarea
                                 name="content"
-                                defaultValue={data.post.content}
+                                defaultValue={markdown}
                                 onChange={async (e) => {
                                     setMarkdown(e.target.value);
                                 }}
@@ -90,11 +75,11 @@ function ExistingPreview() {
                     {/* Preview */}
                     <div className="flex-1 w-1/2">
                         <div className="h-full overflow-auto border border-gray-300 rounded-lg bg-white relative">
-                            <Preview content={markdown || data.post.publicId} />
+                            <Preview content={markdown} />
                         </div>
                     </div>
                 </div>
             </main>
         </div>
-    );
+    )
 }
