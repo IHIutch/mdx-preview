@@ -1,6 +1,5 @@
 import * as React from 'react'
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { nanoid } from 'nanoid';
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import initialContent from 'app/utils/initial-content';
 import appCss from '~/styles/app.css?url'
 import { useServerFn } from '@tanstack/react-start';
@@ -20,6 +19,7 @@ function NewPreview() {
   const [markdown, setMarkdown] = React.useState(initialContent);
   const [isPreviewVisible, setIsPreviewVisible] = React.useState(true);
   const handleSubmit = useServerFn(createPost)
+  const navigate = useNavigate()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -64,7 +64,12 @@ function NewPreview() {
             <form id="editor" className="h-full" method="POST" onSubmit={async (e) => {
               e.preventDefault()
               const formData = new FormData(e.currentTarget)
-              await handleSubmit({ data: formData })
+              const res = await handleSubmit({ data: formData })
+              navigate({
+                to: '/$publicId',
+                params: { publicId: res.publicId },
+                viewTransition: true
+              })
             }}>
               <textarea
                 name="content"

@@ -1,9 +1,9 @@
 import { useServerFn } from '@tanstack/react-start';
 import React from 'react'
 import initialContent from '~/utils/initial-content';
-import { createPost } from '~/utils/server-functions';
+import { createPost, updatePost } from '~/utils/server-functions';
 import Preview from './preview';
-import { useLoaderData, useParams } from '@tanstack/react-router';
+import { redirect, useLoaderData, useNavigate, useParams } from '@tanstack/react-router';
 
 export default function PreviewRoute() {
     // const params = useParams({ from: '/$publicId' })
@@ -14,7 +14,9 @@ export default function PreviewRoute() {
 
     const [isPreviewVisible, setIsPreviewVisible] = React.useState(true);
     const [markdown, setMarkdown] = React.useState(data?.post?.content || initialContent);
-    const handleSubmit = useServerFn(createPost)
+    const handleCreatePost = useServerFn(createPost)
+    const handleUpdatePost = useServerFn(updatePost)
+    const navigate = useNavigate()
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -59,8 +61,22 @@ export default function PreviewRoute() {
                         <form id="editor" className="h-full" method="POST" onSubmit={async (e) => {
                             e.preventDefault()
                             const formData = new FormData(e.currentTarget)
-                            await handleSubmit({ data: formData })
+                            if (data?.post?.publicId) {
+                                await handleUpdatePost({ data: formData })
+                            }
+                            else {
+                                const res = await handleCreatePost({ data: formData })
+                                navigate({
+                                    to: '/$publicId',
+                                    params: { publicId: res.publicId },
+                                    viewTransition: true
+                                })
+                            }
                         }}>
+                            {data?.post?.publicId
+                                ? <input type="hidden" name="publicId" value={data.post.publicId} />
+                                : null}
+
                             <textarea
                                 name="content"
                                 defaultValue={markdown}

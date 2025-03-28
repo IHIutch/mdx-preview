@@ -26,14 +26,14 @@ export const createPost = createServerFn({ method: 'POST' })
             },
         })
 
-        throw redirect({
-            to: `/$publicId`,
-            params: { publicId }
-        })
-        // return {
-        //   publicId,
-        //   content,
-        // }
+        // throw redirect({
+        //     to: `/$publicId`,
+        //     params: { publicId }
+        // })
+        return {
+            publicId,
+            content,
+        }
     })
 
 export const updatePost = createServerFn({ method: 'POST' })

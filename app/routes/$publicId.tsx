@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { createFileRoute, notFound, useLoaderData, useParams } from '@tanstack/react-router'
+import { createFileRoute, notFound } from '@tanstack/react-router'
 import appCss from '~/styles/app.css?url'
 import Preview from '~/components/preview';
 import { getPost, updatePost } from '~/utils/server-functions';

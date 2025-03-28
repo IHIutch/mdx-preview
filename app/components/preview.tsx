@@ -2,13 +2,12 @@ import * as React from 'react'
 import { compileMdx } from '~/utils/compile-mdx';
 
 export default function Preview({ content }: { content: string }) {
+    console.log({ content })
     const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
 
     const sendHTML = React.useCallback(async () => {
-        // console.log('test', content)
         const markupString = await compileMdx(content);
         if (iframeRef.current?.contentWindow) {
-            console.log('hello')
             iframeRef.current.contentWindow?.postMessage({ html: markupString }, '*')
         }
     }, [content, iframeRef.current])
@@ -30,7 +29,7 @@ export default function Preview({ content }: { content: string }) {
                         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uswds/3.11.0/css/uswds.min.css" integrity="sha512-Hc40xGRxbM2Ihz8tDtmRmhHtAzGzlpaHIwOniSb8ClzBIe5mTrW5EEG552LBrp1gELfd+iXJzAtGEUGEvs77NA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
                         <script>
                             window.addEventListener('message', (e) => {
-                                console.log('Received message from parent:', e.data)
+                                // console.log('Received message from parent:', e.data)
                                 if (typeof e.data.html !== 'undefined') {
                                     setHtml(e.data.html)
                                 }
