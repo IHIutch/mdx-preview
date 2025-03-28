@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import { nanoid } from "nanoid"
 import { prisma } from "./prisma"
-import { redirect } from '@tanstack/react-router'
 
 export const createPost = createServerFn({ method: 'POST' })
     .validator((formData: FormData) => {

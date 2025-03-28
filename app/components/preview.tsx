@@ -2,7 +2,6 @@ import * as React from 'react'
 import { compileMdx } from '~/utils/compile-mdx';
 
 export default function Preview({ content }: { content: string }) {
-    console.log({ content })
     const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
 
     const sendHTML = React.useCallback(async () => {

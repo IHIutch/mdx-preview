@@ -11,21 +11,15 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as PublicIdImport } from './routes/$publicId'
-import { Route as IndexImport } from './routes/index'
+import { Route as SplatImport } from './routes/$'
 import { Route as PreviewPublicIdImport } from './routes/preview.$publicId'
+import { Route as PreviewSplatImport } from './routes/preview.$'
 
 // Create/Update Routes
 
-const PublicIdRoute = PublicIdImport.update({
-  id: '/$publicId',
-  path: '/$publicId',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const IndexRoute = IndexImport.update({
-  id: '/',
-  path: '/',
+const SplatRoute = SplatImport.update({
+  id: '/$',
+  path: '/$',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -35,22 +29,28 @@ const PreviewPublicIdRoute = PreviewPublicIdImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const PreviewSplatRoute = PreviewSplatImport.update({
+  id: '/preview/$',
+  path: '/preview/$',
+  getParentRoute: () => rootRoute,
+} as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
+    '/$': {
+      id: '/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof SplatImport
       parentRoute: typeof rootRoute
     }
-    '/$publicId': {
-      id: '/$publicId'
-      path: '/$publicId'
-      fullPath: '/$publicId'
-      preLoaderRoute: typeof PublicIdImport
+    '/preview/$': {
+      id: '/preview/$'
+      path: '/preview/$'
+      fullPath: '/preview/$'
+      preLoaderRoute: typeof PreviewSplatImport
       parentRoute: typeof rootRoute
     }
     '/preview/$publicId': {
@@ -66,42 +66,42 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/$publicId': typeof PublicIdRoute
+  '/$': typeof SplatRoute
+  '/preview/$': typeof PreviewSplatRoute
   '/preview/$publicId': typeof PreviewPublicIdRoute
 }
 
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/$publicId': typeof PublicIdRoute
+  '/$': typeof SplatRoute
+  '/preview/$': typeof PreviewSplatRoute
   '/preview/$publicId': typeof PreviewPublicIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/$publicId': typeof PublicIdRoute
+  '/$': typeof SplatRoute
+  '/preview/$': typeof PreviewSplatRoute
   '/preview/$publicId': typeof PreviewPublicIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$publicId' | '/preview/$publicId'
+  fullPaths: '/$' | '/preview/$' | '/preview/$publicId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$publicId' | '/preview/$publicId'
-  id: '__root__' | '/' | '/$publicId' | '/preview/$publicId'
+  to: '/$' | '/preview/$' | '/preview/$publicId'
+  id: '__root__' | '/$' | '/preview/$' | '/preview/$publicId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  PublicIdRoute: typeof PublicIdRoute
+  SplatRoute: typeof SplatRoute
+  PreviewSplatRoute: typeof PreviewSplatRoute
   PreviewPublicIdRoute: typeof PreviewPublicIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  PublicIdRoute: PublicIdRoute,
+  SplatRoute: SplatRoute,
+  PreviewSplatRoute: PreviewSplatRoute,
   PreviewPublicIdRoute: PreviewPublicIdRoute,
 }
 
@@ -115,16 +115,16 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/",
-        "/$publicId",
+        "/$",
+        "/preview/$",
         "/preview/$publicId"
       ]
     },
-    "/": {
-      "filePath": "index.tsx"
+    "/$": {
+      "filePath": "$.tsx"
     },
-    "/$publicId": {
-      "filePath": "$publicId.tsx"
+    "/preview/$": {
+      "filePath": "preview.$.tsx"
     },
     "/preview/$publicId": {
       "filePath": "preview.$publicId.tsx"

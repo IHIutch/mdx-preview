@@ -12,6 +12,7 @@
   "dependencies": {
     "@libsql/client": "^0.15.1",
     "@mdx-js/mdx": "^3.1.0",
+    "@monaco-editor/react": "^4.7.0",
     "@prisma/adapter-libsql": "^6.5.0",
     "@prisma/client": "^6.5.0",
     "@t3-oss/env-core": "^0.12.0",
@@ -19,6 +20,7 @@
     "@tanstack/react-router": "^1.114.29",
     "@tanstack/react-router-devtools": "^1.114.29",
     "@tanstack/react-start": "^1.114.29",
+    "cva": "1.0.0-beta.3",
     "dexie": "^4.0.11",
     "dexie-react-hooks": "^1.1.7",
     "nanoid": "^5.1.5",
@@ -29,11 +31,14 @@
     "remark-gfm": "^4.0.1",
     "remark-smartypants": "^3.0.2",
     "tailwind-merge": "^3.0.2",
+    "tw-merge": "0.0.1-alpha.3",
     "vinxi": "0.5.3",
     "vite": "^6.2.3",
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@iconify/json": "^2.2.321",
+    "@iconify/tailwind4": "^1.0.6",
     "@types/node": "^22.13.14",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.3",

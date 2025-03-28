@@ -1,25 +1,69 @@
 import * as React from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, notFound, useNavigate } from '@tanstack/react-router'
 import initialContent from 'app/utils/initial-content';
 import appCss from '~/styles/app.css?url'
 import { useServerFn } from '@tanstack/react-start';
 import Preview from '~/components/preview';
-import { createPost } from '~/utils/server-functions';
+import { createPost, getPost, updatePost } from '~/utils/server-functions';
+import { z } from 'zod';
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute('/preview/$')({
   component: NewPreview,
   head: () => ({
     links: [
       { rel: 'stylesheet', href: appCss },
     ]
-  })
+  }),
+  params: {
+    stringify: (params: { publicId?: string }) => {
+      return {
+        _splat: params.publicId
+      }
+    },
+    parse: (params) => {
+      if (params._splat === '') {
+        return {
+          publicId: undefined
+        }
+      }
+      // Extract the publicId from the _splat parameter
+      const publicId = params._splat?.split('/')[0]
+      const isValid = z.string().length(10).safeParse(publicId)
+      if (!isValid.success) {
+        throw notFound()
+      }
+      return {
+        publicId: isValid.data,
+      }
+    },
+  },
+  loader: async ({ params }) => {
+    if (!params.publicId) {
+      return {
+        post: null
+      };
+    }
+
+    const post = await getPost({ data: params.publicId });
+    if (!post) {
+      throw notFound()
+    }
+
+    return {
+      post
+    };
+  }
 })
 
 function NewPreview() {
-  const [markdown, setMarkdown] = React.useState(initialContent);
+  const data = Route.useLoaderData()
   const [isPreviewVisible, setIsPreviewVisible] = React.useState(true);
-  const handleSubmit = useServerFn(createPost)
-  const navigate = useNavigate()
+  const [markdown, setMarkdown] = React.useState(data?.post?.content || initialContent);
+  const handleCreatePost = useServerFn(createPost)
+  const handleUpdatePost = useServerFn(updatePost)
+  const navigate = useNavigate({
+    from: '/$',
+  })
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -64,13 +108,23 @@ function NewPreview() {
             <form id="editor" className="h-full" method="POST" onSubmit={async (e) => {
               e.preventDefault()
               const formData = new FormData(e.currentTarget)
-              const res = await handleSubmit({ data: formData })
-              navigate({
-                to: '/$publicId',
-                params: { publicId: res.publicId },
-                viewTransition: true
-              })
+              if (data?.post?.publicId) {
+                await handleUpdatePost({ data: formData })
+              }
+              else {
+                const res = await handleCreatePost({ data: formData })
+                console.log({ res })
+                navigate({
+                  to: '/preview/$',
+                  params: { publicId: res.publicId },
+                  // viewTransition: true
+                })
+              }
             }}>
+              {data?.post?.publicId
+                ? <input type="hidden" name="publicId" value={data.post.publicId} />
+                : null}
+
               <textarea
                 name="content"
                 defaultValue={markdown}
