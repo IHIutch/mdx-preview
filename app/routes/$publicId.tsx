@@ -1,10 +1,9 @@
 import * as React from 'react'
 import { createFileRoute, notFound } from '@tanstack/react-router'
-import { useLiveQuery } from 'dexie-react-hooks';
-import { dexieDb } from 'app/utils/db';
 import appCss from '~/styles/app.css?url'
 import { createServerFn } from '@tanstack/react-start';
 import { prisma } from 'app/utils/prisma';
+import { compileMdx } from '~/utils/compile-mdx';
 
 const getPost = createServerFn({ method: 'GET' })
     .validator((d: string) => d)
@@ -49,7 +48,6 @@ export const sharePost = createServerFn({ method: 'POST' })
                 Location: `/${publicId}`,
             }
         })
-
     })
 
 export const Route = createFileRoute('/$publicId')({
@@ -71,13 +69,26 @@ export const Route = createFileRoute('/$publicId')({
 })
 
 function Component() {
-    const { publicId } = Route.useParams()
     const data = Route.useLoaderData();
     const [isPreviewVisible, setIsPreviewVisible] = React.useState(true);
+    const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
+    const [markdown, setMarkdown] = React.useState(data.post.content);
 
-    console.log({ data })
+    const injectMdx = React.useCallback(async () => {
+        const contentString = await compileMdx(markdown);
 
-    const posts = useLiveQuery(() => dexieDb.posts.toArray());
+        const iframeEl = iframeRef.current;
+        if (iframeEl && iframeEl.contentDocument) {
+            const contentDiv = iframeEl.contentDocument.getElementById('content');
+            if (contentDiv) {
+                contentDiv.innerHTML = contentString || '';
+            }
+        }
+    }, [markdown]);
+
+    React.useEffect(() => {
+        injectMdx();
+    }, [injectMdx]);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -126,9 +137,10 @@ function Component() {
                                 defaultValue={data.post.content}
                                 onChange={async (e) => {
                                     const content = (e.target as HTMLTextAreaElement).value;
-                                    if (posts?.length) {
-                                        await dexieDb.posts.update(posts[0].id, { content });
-                                    }
+                                    // if (posts?.length) {
+                                    //     await dexieDb.posts.update(posts[0].id, { content });
+                                    // }
+                                    setMarkdown(content);
                                 }}
                                 className="w-full h-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white font-mono text-sm resize-none"
                                 placeholder="Write your MDX here..."
@@ -138,7 +150,26 @@ function Component() {
                     {/* Preview */}
                     <div className="flex-1 w-1/2">
                         <div className="h-full overflow-auto border border-gray-300 rounded-lg bg-white relative">
-                            <iframe className="size-full" src="./preview/eGtFmOiYOv" />
+                            <iframe
+                                ref={iframeRef}
+                                onLoad={injectMdx}
+                                srcDoc={`
+                                        <!DOCTYPE html>
+                                        <html lang="en">
+                                        <head>
+                                            <meta charset="UTF-8">
+                                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                            <title>MDX Preview</title>
+                                            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uswds/3.11.0/css/uswds.min.css" integrity="sha512-Hc40xGRxbM2Ihz8tDtmRmhHtAzGzlpaHIwOniSb8ClzBIe5mTrW5EEG552LBrp1gELfd+iXJzAtGEUGEvs77NA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+                                        </head>
+                                        <body class="max-w-none">
+                                            <div id="content" class="padding-4 usa-prose"></div>
+                                        </body>
+                                        </html>
+                                    `}
+                                title="MDX Preview"
+                                className="w-full h-full border-none"
+                            />
                         </div>
                     </div>
                 </div>
