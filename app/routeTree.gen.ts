@@ -12,26 +12,12 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as SplatImport } from './routes/$'
-import { Route as PreviewPublicIdImport } from './routes/preview.$publicId'
-import { Route as PreviewSplatImport } from './routes/preview.$'
 
 // Create/Update Routes
 
 const SplatRoute = SplatImport.update({
   id: '/$',
   path: '/$',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const PreviewPublicIdRoute = PreviewPublicIdImport.update({
-  id: '/preview/$publicId',
-  path: '/preview/$publicId',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const PreviewSplatRoute = PreviewSplatImport.update({
-  id: '/preview/$',
-  path: '/preview/$',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -46,20 +32,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SplatImport
       parentRoute: typeof rootRoute
     }
-    '/preview/$': {
-      id: '/preview/$'
-      path: '/preview/$'
-      fullPath: '/preview/$'
-      preLoaderRoute: typeof PreviewSplatImport
-      parentRoute: typeof rootRoute
-    }
-    '/preview/$publicId': {
-      id: '/preview/$publicId'
-      path: '/preview/$publicId'
-      fullPath: '/preview/$publicId'
-      preLoaderRoute: typeof PreviewPublicIdImport
-      parentRoute: typeof rootRoute
-    }
   }
 }
 
@@ -67,42 +39,32 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/$': typeof SplatRoute
-  '/preview/$': typeof PreviewSplatRoute
-  '/preview/$publicId': typeof PreviewPublicIdRoute
 }
 
 export interface FileRoutesByTo {
   '/$': typeof SplatRoute
-  '/preview/$': typeof PreviewSplatRoute
-  '/preview/$publicId': typeof PreviewPublicIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/$': typeof SplatRoute
-  '/preview/$': typeof PreviewSplatRoute
-  '/preview/$publicId': typeof PreviewPublicIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/$' | '/preview/$' | '/preview/$publicId'
+  fullPaths: '/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/$' | '/preview/$' | '/preview/$publicId'
-  id: '__root__' | '/$' | '/preview/$' | '/preview/$publicId'
+  to: '/$'
+  id: '__root__' | '/$'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   SplatRoute: typeof SplatRoute
-  PreviewSplatRoute: typeof PreviewSplatRoute
-  PreviewPublicIdRoute: typeof PreviewPublicIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   SplatRoute: SplatRoute,
-  PreviewSplatRoute: PreviewSplatRoute,
-  PreviewPublicIdRoute: PreviewPublicIdRoute,
 }
 
 export const routeTree = rootRoute
@@ -115,19 +77,11 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/$",
-        "/preview/$",
-        "/preview/$publicId"
+        "/$"
       ]
     },
     "/$": {
       "filePath": "$.tsx"
-    },
-    "/preview/$": {
-      "filePath": "preview.$.tsx"
-    },
-    "/preview/$publicId": {
-      "filePath": "preview.$publicId.tsx"
     }
   }
 }

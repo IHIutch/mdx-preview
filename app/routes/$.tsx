@@ -62,7 +62,7 @@ export const Route = createFileRoute('/$')({
 
 function NewPreview() {
   const data = Route.useLoaderData()
-  const [isPreviewVisible, setIsPreviewVisible] = React.useState(true);
+  const [isEditorVisible, setIsEditorVisible] = React.useState(true);
   const [markdown, setMarkdown] = React.useState(data?.post?.content || initialContent);
   const [isSaving, setIsSaving] = React.useState(false);
   const handleCreatePost = useServerFn(createPost)
@@ -84,20 +84,20 @@ function NewPreview() {
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => setIsPreviewVisible(!isPreviewVisible)}
+              onClick={() => setIsEditorVisible(!isEditorVisible)}
               className={cx("inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer", {
                 'bg-gray-100': isSaving,
               })}
             >
-              {isPreviewVisible ? (
+              {isEditorVisible ? (
                 <>
                   {/* <Split className="h-4 w-4 mr-2" /> */}
-                  Hide Preview
+                  Hide Editor
                 </>
               ) : (
                 <>
                   {/* <Eye className="h-4 w-4 mr-2" /> */}
-                  Show Preview
+                  Show Editor
                 </>
               )}
             </button>
@@ -122,50 +122,54 @@ function NewPreview() {
       {/* Main Content */}
       <main className="flex-1 flex gap-6 h-full">
         {/* Editor */}
-        <div className={`flex-1 ${isPreviewVisible ? 'w-1/2' : 'w-full'}`}>
-          <form id="editor" className="h-full" method="POST" onSubmit={async (e) => {
-            e.preventDefault()
-            if (isSaving) return
-            setIsSaving(true)
-            const formData = new FormData(e.currentTarget)
-            if (data?.post?.publicId) {
-              await handleUpdatePost({ data: formData })
-            }
-            else {
-              const res = await handleCreatePost({ data: formData })
-              navigate({
-                to: '/$',
-                params: { publicId: res.publicId },
-              })
-            }
-            setIsSaving(false)
-          }}>
-            {data?.post?.publicId
-              ? <input type="hidden" name="publicId" value={data.post.publicId} />
-              : null}
+        {isEditorVisible ? (
+          <div className="flex-1 w-1/2">
+            <form id="editor" className="h-full" method="POST" onSubmit={async (e) => {
+              e.preventDefault()
+              if (isSaving) return
+              setIsSaving(true)
+              const formData = new FormData(e.currentTarget)
+              if (data?.post?.publicId) {
+                await handleUpdatePost({ data: formData })
+              }
+              else {
+                const res = await handleCreatePost({ data: formData })
+                navigate({
+                  to: '/$',
+                  params: { publicId: res.publicId },
+                })
+              }
+              setIsSaving(false)
+            }}>
+              {data?.post?.publicId
+                ? <input type="hidden" name="publicId" value={data.post.publicId} />
+                : null}
 
-            <input type="hidden" name="content" value={markdown} />
-            <div className="size-full border-r border-gray-300">
-              <Editor
-                className="size-full"
-                defaultLanguage="mdx"
-                defaultValue={markdown}
-                onChange={(value) => {
-                  setMarkdown(value || '');
-                }}
-                loading={null}
-                options={{
-                  minimap: {
-                    enabled: false,
-                  },
-                  contextmenu: false,
-                }}
-              />
-            </div>
-          </form>
-        </div>
+              <input type="hidden" name="content" value={markdown} />
+              <div className="size-full border-r border-gray-300">
+                <Editor
+                  className="size-full"
+                  defaultLanguage="mdx"
+                  defaultValue={markdown}
+                  onChange={(value) => {
+                    setMarkdown(value || '');
+                  }}
+                  loading={null}
+                  options={{
+                    minimap: {
+                      enabled: false,
+                    },
+                    contextmenu: false,
+                  }}
+                />
+              </div>
+            </form>
+          </div>
+        ) : null}
         {/* Preview */}
-        <div className="flex-1 w-1/2">
+        <div className={cx('flex-1', [
+          isEditorVisible ? 'w-1/2' : 'w-full',
+        ])}>
           <div className="h-full border-l border-gray-300 bg-white relative">
             <Preview content={markdown} />
           </div>
