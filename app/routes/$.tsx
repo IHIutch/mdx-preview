@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { createFileRoute, notFound, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, notFound, useNavigate } from '@tanstack/react-router'
 import initialContent from 'app/utils/initial-content';
 import appCss from '~/styles/app.css?url'
 import { useServerFn } from '@tanstack/react-start';
@@ -8,10 +8,12 @@ import { createPost, getPost, updatePost } from '~/utils/server-functions';
 import { z } from 'zod';
 import { Editor } from '@monaco-editor/react';
 import { cx } from "cva.config"
+import { NotFound } from '~/components/NotFound';
 // const Editor = React.lazy(() => import('@monaco-editor/react').then((mod) => ({ default: mod.Editor })))
 
 export const Route = createFileRoute('/$')({
   component: NewPreview,
+  notFoundComponent: () => <NotFound />,
   head: () => ({
     links: [
       { rel: 'stylesheet', href: appCss },
@@ -24,21 +26,14 @@ export const Route = createFileRoute('/$')({
       }
     },
     parse: ({ _splat }) => {
-      if (_splat === '') {
+      const publicId = _splat?.split('/')[0] || ''
+      if (publicId === '') {
         return {
           publicId: undefined
         }
       }
-      // Extract the publicId from the _splat parameter
-      const publicId = _splat?.split('/')[0]
-      const isValid = z.string().length(10).safeParse(publicId)
-      if (!isValid.success) {
-        throw notFound()
-      } else {
-
-      }
       return {
-        publicId: isValid.data,
+        publicId,
       }
     },
   },
@@ -65,11 +60,25 @@ function NewPreview() {
   const [isEditorVisible, setIsEditorVisible] = React.useState(true);
   const [markdown, setMarkdown] = React.useState(data?.post?.content || initialContent);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [isDirty, setIsDirty] = React.useState(false);
+
   const handleCreatePost = useServerFn(createPost)
   const handleUpdatePost = useServerFn(updatePost)
   const navigate = useNavigate({
     from: '/$',
   })
+
+  React.useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isDirty]);
 
   return (
     <div className="fixed inset-0 bg-gray-50 flex flex-col">
@@ -79,15 +88,19 @@ function NewPreview() {
           <div className="flex items-center space-x-2">
             {/* <FileText className="h-6 w-6 text-indigo-600" /> */}
             <h1 className="text-xl font-semibold text-gray-900">
-              MDX Editor
+              <Link
+                to="/$"
+                params={{
+                  'publicId': '',
+                }}
+                reloadDocument
+              >MDX Editor</Link>
             </h1>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => setIsEditorVisible(!isEditorVisible)}
-              className={cx("inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer", {
-                'bg-gray-100': isSaving,
-              })}
+              className={cx("inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer")}
             >
               {isEditorVisible ? (
                 <>
@@ -104,7 +117,8 @@ function NewPreview() {
             <button
               type='submit'
               form="editor"
-              className={cx('inline-flex items-center px-3 py-2 border border-blue-500 shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer relative', {
+              disabled={!isDirty}
+              className={cx('inline-flex items-center px-3 py-2 border border-blue-500 shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer relative disabled:opacity-40 disabled:cursor-not-allowed', {
                 "opacity-40": isSaving,
               })}
             >
@@ -140,6 +154,7 @@ function NewPreview() {
                 })
               }
               setIsSaving(false)
+              setIsDirty(false)
             }}>
               {data?.post?.publicId
                 ? <input type="hidden" name="publicId" value={data.post.publicId} />
@@ -153,6 +168,9 @@ function NewPreview() {
                   defaultValue={markdown}
                   onChange={(value) => {
                     setMarkdown(value || '');
+                    if (value !== data?.post?.content) {
+                      setIsDirty(true);
+                    }
                   }}
                   loading={null}
                   options={{
