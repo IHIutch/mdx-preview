@@ -19,7 +19,6 @@ export default function Preview({ content }: { content: string }) {
     <iframe
       ref={iframeRef}
       onLoad={sendHTML}
-      sandbox="allow-same-origin"
       srcDoc={`<!DOCTYPE html>
                     <html lang="en">
                     <head>
