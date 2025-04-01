@@ -8,7 +8,8 @@
     "build": "vinxi build",
     "start": "vinxi start",
     "prisma": "prisma",
-    "lint": "eslint 'app/**/*.{js,jsx,ts,tsx,json}'"
+    "lint": "eslint 'app/**/*.{js,jsx,ts,tsx,json}'",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@libsql/client": "^0.15.1",
