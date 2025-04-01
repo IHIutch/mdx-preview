@@ -11,17 +11,21 @@ const libsql = createClient({
 
 const adapter = new PrismaLibSQL(libsql)
 
-const prismaGlobal = globalThis as typeof globalThis & {
-    prisma?: PrismaClient
-}
-
-export const prisma: PrismaClient
-    = prismaGlobal.prisma
-    || new PrismaClient({
+const prismaClientSingleton = () => {
+    return new PrismaClient({
         adapter,
         log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     })
+}
 
-// if (process.env.NODE_ENV !== 'production') {
-//     prismaGlobal.prisma = prisma
-// }
+type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>
+
+const globalForPrisma = globalThis as unknown as {
+    prisma: PrismaClientSingleton | undefined
+}
+
+export const prisma = globalForPrisma.prisma ?? prismaClientSingleton()
+
+if (process.env.NODE_ENV !== 'production') {
+    globalForPrisma.prisma = prisma
+}
