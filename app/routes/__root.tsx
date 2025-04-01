@@ -1,13 +1,12 @@
 import {
+  createRootRoute,
   HeadContent,
   Outlet,
   Scripts,
-  createRootRoute,
 } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-import * as React from 'react'
 import { DefaultCatchBoundary } from 'app/components/DefaultCatchBoundary'
 import { NotFound } from 'app/components/NotFound'
+import * as React from 'react'
 
 export const Route = createRootRoute({
   head: () => ({

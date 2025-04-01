@@ -1,14 +1,13 @@
-import * as React from 'react'
+import { Editor } from '@monaco-editor/react'
 import { createFileRoute, Link, notFound, useNavigate } from '@tanstack/react-router'
-import initialContent from 'app/utils/initial-content';
+import { useServerFn } from '@tanstack/react-start'
+import initialContent from 'app/utils/initial-content'
+import { cx } from 'cva.config'
+import * as React from 'react'
+import { NotFound } from '~/components/NotFound'
+import Preview from '~/components/preview'
 import appCss from '~/styles/app.css?url'
-import { useServerFn } from '@tanstack/react-start';
-import Preview from '~/components/preview';
-import { createPost, getPost, updatePost } from '~/utils/server-functions';
-import { z } from 'zod';
-import { Editor } from '@monaco-editor/react';
-import { cx } from "cva.config"
-import { NotFound } from '~/components/NotFound';
+import { createPost, getPost } from '~/utils/server-functions'
 // const Editor = React.lazy(() => import('@monaco-editor/react').then((mod) => ({ default: mod.Editor })))
 
 export const Route = createFileRoute('/$')({
@@ -17,19 +16,19 @@ export const Route = createFileRoute('/$')({
   head: () => ({
     links: [
       { rel: 'stylesheet', href: appCss },
-    ]
+    ],
   }),
   params: {
     stringify: (params: { publicId?: string }) => {
       return {
-        _splat: params.publicId
+        _splat: params.publicId,
       }
     },
     parse: ({ _splat }) => {
       const publicId = _splat?.split('/')[0] || ''
       if (publicId === '') {
         return {
-          publicId: undefined
+          publicId: undefined,
         }
       }
       return {
@@ -40,30 +39,29 @@ export const Route = createFileRoute('/$')({
   loader: async ({ params }) => {
     if (!params.publicId) {
       return {
-        post: null
-      };
+        post: null,
+      }
     }
 
-    const post = await getPost({ data: params.publicId });
+    const post = await getPost({ data: params.publicId })
     if (!post) {
       throw notFound()
     }
 
     return {
-      post
-    };
-  }
+      post,
+    }
+  },
 })
 
 function NewPreview() {
   const data = Route.useLoaderData()
-  const [isEditorVisible, setIsEditorVisible] = React.useState(true);
-  const [markdown, setMarkdown] = React.useState(data?.post?.content || initialContent);
-  const [isSaving, setIsSaving] = React.useState(false);
-  const [isDirty, setIsDirty] = React.useState(false);
+  const [isEditorVisible, setIsEditorVisible] = React.useState(true)
+  const [markdown, setMarkdown] = React.useState(data?.post?.content || initialContent)
+  const [isSaving, setIsSaving] = React.useState(false)
+  const [isDirty, setIsDirty] = React.useState(false)
 
   const handleCreatePost = useServerFn(createPost)
-  const handleUpdatePost = useServerFn(updatePost)
   const navigate = useNavigate({
     from: '/$',
   })
@@ -71,14 +69,14 @@ function NewPreview() {
   React.useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
-        e.preventDefault();
+        e.preventDefault()
       }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [isDirty]);
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [isDirty])
 
   return (
     <div className="fixed inset-0 bg-gray-50 flex flex-col">
@@ -91,43 +89,55 @@ function NewPreview() {
               <Link
                 to="/$"
                 params={{
-                  'publicId': '',
+                  publicId: '',
                 }}
                 reloadDocument
-              >MDX Editor</Link>
+              >
+                MDX Editor
+              </Link>
             </h1>
           </div>
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={() => setIsEditorVisible(!isEditorVisible)}
-              className={cx("inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer")}
+              className={cx('inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer')}
             >
-              {isEditorVisible ? (
-                <>
-                  {/* <Split className="h-4 w-4 mr-2" /> */}
-                  Hide Editor
-                </>
-              ) : (
-                <>
-                  {/* <Eye className="h-4 w-4 mr-2" /> */}
-                  Show Editor
-                </>
-              )}
+              {isEditorVisible
+                ? (
+                    <>
+                      {/* <Split className="h-4 w-4 mr-2" /> */}
+                      Hide Editor
+                    </>
+                  )
+                : (
+                    <>
+                      {/* <Eye className="h-4 w-4 mr-2" /> */}
+                      Show Editor
+                    </>
+                  )}
             </button>
             <button
-              type='submit'
+              type="submit"
               form="editor"
               disabled={!isDirty}
               className={cx('inline-flex items-center px-3 py-2 border border-blue-500 shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer relative disabled:opacity-40 disabled:cursor-not-allowed', {
-                "opacity-40": isSaving,
+                'opacity-40': isSaving,
               })}
             >
               <span className={cx({
-                "invisible": isSaving,
-              })}>Share</span>
-              {isSaving ? <div className='absolute inset-0 flex items-center justify-center'>
-                <span className="icon-[material-symbols--progress-activity] animate-spin"></span>
-              </div> : null}
+                invisible: isSaving,
+              })}
+              >
+                Share
+              </span>
+              {isSaving
+                ? (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="icon-[material-symbols--progress-activity] animate-spin"></span>
+                    </div>
+                  )
+                : null}
             </button>
           </div>
         </div>
@@ -136,63 +146,65 @@ function NewPreview() {
       {/* Main Content */}
       <main className="flex-1 flex gap-6 h-full">
         {/* Editor */}
-        {isEditorVisible ? (
-          <div className="flex-1 w-1/2">
-            <form id="editor" className="h-full" method="POST" onSubmit={async (e) => {
-              e.preventDefault()
-              if (isSaving) return
-              setIsSaving(true)
-              const formData = new FormData(e.currentTarget)
-              if (data?.post?.publicId) {
-                await handleUpdatePost({ data: formData })
-              }
-              else {
-                const res = await handleCreatePost({ data: formData })
-                navigate({
-                  to: '/$',
-                  params: { publicId: res.publicId },
-                })
-              }
-              setIsSaving(false)
-              setIsDirty(false)
-            }}>
-              {data?.post?.publicId
-                ? <input type="hidden" name="publicId" value={data.post.publicId} />
-                : null}
-
-              <input type="hidden" name="content" value={markdown} />
-              <div className="size-full border-r border-gray-300">
-                <Editor
-                  className="size-full"
-                  defaultLanguage="mdx"
-                  defaultValue={markdown}
-                  onChange={(value) => {
-                    setMarkdown(value || '');
-                    if (value !== data?.post?.content) {
-                      setIsDirty(true);
-                    }
+        {isEditorVisible
+          ? (
+              <div className="flex-1 w-1/2">
+                <form
+                  id="editor"
+                  className="h-full"
+                  method="POST"
+                  onSubmit={async (e) => {
+                    e.preventDefault()
+                    if (isSaving)
+                      return
+                    setIsSaving(true)
+                    const formData = new FormData(e.currentTarget)
+                    const res = await handleCreatePost({ data: formData })
+                    navigate({
+                      to: '/$',
+                      params: { publicId: res.publicId },
+                    })
+                    setIsSaving(false)
+                    setIsDirty(false)
                   }}
-                  loading={null}
-                  options={{
-                    minimap: {
-                      enabled: false,
-                    },
-                    contextmenu: false,
-                  }}
-                />
+                >
+                  <input type="hidden" name="content" value={markdown} />
+                  <div className="size-full border-r border-gray-300">
+                    <Editor
+                      className="size-full"
+                      defaultLanguage="mdx"
+                      defaultValue={markdown}
+                      onChange={(value) => {
+                        setMarkdown(value || '')
+                        if (value !== data?.post?.content) {
+                          setIsDirty(true)
+                        }
+                      }}
+                      loading={null}
+                      options={{
+                        minimap: {
+                          enabled: false,
+                        },
+                        fontSize: 14,
+                        lineHeight: 1.6,
+                        contextmenu: false,
+                      }}
+                    />
+                  </div>
+                </form>
               </div>
-            </form>
-          </div>
-        ) : null}
+            )
+          : null}
         {/* Preview */}
         <div className={cx('flex-1', [
           isEditorVisible ? 'w-1/2' : 'w-full',
-        ])}>
+        ])}
+        >
           <div className="h-full border-l border-gray-300 bg-white relative">
             <Preview content={markdown} />
           </div>
         </div>
       </main>
     </div>
-  );
+  )
 }

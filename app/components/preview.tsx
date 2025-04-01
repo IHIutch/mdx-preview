@@ -1,25 +1,26 @@
 import * as React from 'react'
-import { compileMdx } from '~/utils/compile-mdx';
+import { compileMdx } from '~/utils/compile-mdx'
 
 export default function Preview({ content }: { content: string }) {
-    const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
+  const iframeRef = React.useRef<HTMLIFrameElement | null>(null)
 
-    const sendHTML = React.useCallback(async () => {
-        const markupString = await compileMdx(content);
-        if (iframeRef.current?.contentWindow) {
-            iframeRef.current.contentWindow?.postMessage({ html: markupString }, '*')
-        }
-    }, [content, iframeRef.current])
+  const sendHTML = React.useCallback(async () => {
+    const markupString = await compileMdx(content)
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow?.postMessage({ html: markupString }, '*')
+    }
+  }, [content])
 
-    React.useEffect(() => {
-        sendHTML()
-    }, [sendHTML])
+  React.useEffect(() => {
+    sendHTML()
+  }, [sendHTML])
 
-    return (
-        <iframe
-            ref={iframeRef}
-            onLoad={sendHTML}
-            srcDoc={`<!DOCTYPE html>
+  return (
+    <iframe
+      ref={iframeRef}
+      onLoad={sendHTML}
+      sandbox="allow-same-origin"
+      srcDoc={`<!DOCTYPE html>
                     <html lang="en">
                     <head>
                         <meta charset="UTF-8">
@@ -45,8 +46,8 @@ export default function Preview({ content }: { content: string }) {
                     <body class="padding-4 usa-prose"></body>
                     </html>
                 `}
-            title="MDX Preview"
-            className="w-full h-full border-none"
-        />
-    )
+      title="MDX Preview"
+      className="w-full h-full border-none"
+    />
+  )
 }

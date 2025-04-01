@@ -25,6 +25,6 @@ function hello() {
 | Preview | ✅ |
 | MDX | ✅ |
 | Tables | ✅ |
-`;
+`
 
-export default initialContent;
+export default initialContent
