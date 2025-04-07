@@ -15,7 +15,7 @@ Try editing this markdown on the left side!
 <InfoBox heading="Success Status" headingAs="h4" variant="success">This is a custom component rendered in MDX!</InfoBox>
 <InfoBox heading="Error Status" headingAs="h4" variant="error">This is a custom component rendered in MDX!</InfoBox>
 <InfoBox heading="Emergency Status" headingAs="h4" variant="emergency">This is a custom component rendered in MDX!</InfoBox>
-<InfoBox heading="Info Status" size="slim">This is a custom component rendered in MDX!</InfoBox>
+<InfoBox heading="Info Status" size="slim">Lorem ipsum dolor sit amet, [consectetur adipiscing](#) elit, sed do eiusmod.</InfoBox>
 <InfoBox heading="Info Status" noIcon>This is a custom component rendered in MDX!</InfoBox>
 
 ### Code Example

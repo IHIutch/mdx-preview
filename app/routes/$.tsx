@@ -144,7 +144,7 @@ function NewPreview() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex gap-6 h-full">
+      <main className="flex-1 flex gap-4 h-full">
         {/* Editor */}
         {isEditorVisible
           ? (
