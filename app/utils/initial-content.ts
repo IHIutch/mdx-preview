@@ -10,7 +10,13 @@ const initialContent = `# Welcome to the MDX Editor!
 Try editing this markdown on the left side!
 
 ### Custom Components Example
-<InfoBox>This is a custom component rendered in MDX!</InfoBox>
+<InfoBox heading="Info Status">This is a custom component rendered in MDX!</InfoBox>
+<InfoBox heading="Warning Status" headingAs="h4" variant="warning">This is a custom component rendered in MDX!</InfoBox>
+<InfoBox heading="Success Status" headingAs="h4" variant="success">This is a custom component rendered in MDX!</InfoBox>
+<InfoBox heading="Error Status" headingAs="h4" variant="error">This is a custom component rendered in MDX!</InfoBox>
+<InfoBox heading="Emergency Status" headingAs="h4" variant="emergency">This is a custom component rendered in MDX!</InfoBox>
+<InfoBox heading="Info Status" size="slim">This is a custom component rendered in MDX!</InfoBox>
+<InfoBox heading="Info Status" noIcon>This is a custom component rendered in MDX!</InfoBox>
 
 ### Code Example
 \`\`\`javascript
