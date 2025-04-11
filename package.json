@@ -9,7 +9,8 @@
     "start": "vinxi start",
     "prisma": "prisma",
     "lint": "eslint 'app/**/*.{js,jsx,ts,tsx,json}'",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db-tunnel": "npx @prisma/ppg-tunnel --host 127.0.0.1 --port 52604"
   },
   "dependencies": {
     "@mdx-js/mdx": "^3.1.0",
