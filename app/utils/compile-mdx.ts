@@ -8,6 +8,7 @@ import { AccordionItem, AccordionList } from '~/components/mdx-components/accord
 import { Button } from '~/components/mdx-components/button'
 import { ButtonGroup } from '~/components/mdx-components/button-group'
 import { InfoBox } from '~/components/mdx-components/info-box'
+import { ProcessItem, ProcessList } from '~/components/mdx-components/process-list'
 
 export async function compileMdx(markdown: string) {
   try {
@@ -28,6 +29,8 @@ export async function compileMdx(markdown: string) {
         Button,
         ButtonGroup,
         InfoBox,
+        ProcessList,
+        ProcessItem,
       },
     }))
   }

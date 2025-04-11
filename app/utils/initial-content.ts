@@ -9,6 +9,20 @@ const initialContent = `# Welcome to the MDX Editor!
 
 Try editing this markdown on the left side!
 
+### Process List
+
+<ProcessList>
+  <ProcessItem headingText="Start a process">
+    Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi commodo, ipsum sed pharetra gravida, orci magna rhoncus neque.
+    - Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi commodo, ipsum sed pharetra gravida, orci magna rhoncus neque, id pulvinar odio lorem non turpis.
+    - Nullam sit amet enim. Suspendisse id velit vitae ligula volutpat condimentum.
+    - Aliquam erat volutpat. Sed quis velit.
+  </ProcessItem>
+  <ProcessItem headingText="Proceed to the second step">
+    Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi commodo, ipsum sed pharetra gravida, orci magna rhoncus neque, id pulvinar odio lorem non turpis. Nullam sit amet enim. 
+  </ProcessItem>
+</ProcessList>
+
 ### Alert
 <InfoBox headingText="Info Status">This is a custom component rendered in MDX!</InfoBox>
 <InfoBox headingText="Warning Status" headingAs="h4" variant="warning">This is a custom component rendered in MDX!</InfoBox>
