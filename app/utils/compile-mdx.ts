@@ -4,6 +4,9 @@ import { renderToString } from 'react-dom/server'
 import * as runtime from 'react/jsx-runtime'
 import remarkGfm from 'remark-gfm'
 import remarkSmartypants from 'remark-smartypants'
+import { AccordionItem, AccordionList } from '~/components/mdx-components/accordion'
+import { Button } from '~/components/mdx-components/button'
+import { ButtonGroup } from '~/components/mdx-components/button-group'
 import { InfoBox } from '~/components/mdx-components/info-box'
 
 export async function compileMdx(markdown: string) {
@@ -20,6 +23,10 @@ export async function compileMdx(markdown: string) {
 
     return renderToString(createElement(result.default, {
       components: {
+        AccordionList,
+        AccordionItem,
+        Button,
+        ButtonGroup,
         InfoBox,
       },
     }))

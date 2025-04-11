@@ -1,5 +1,5 @@
 import type { VariantProps } from 'cva'
-import { cva } from 'cva'
+import { cva } from 'cva.config'
 
 const infoBox = cva({
   base: 'usa-alert',
@@ -34,21 +34,48 @@ export type InfoBoxProps = ({
   'aria-label'?: never
 }) & ({
   size: 'slim'
-  heading?: never
+  headingText?: never
   headingAs?: never
 } | {
   size?: never
-  heading: string
+  headingText: string
   headingAs: 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p'
 }) & React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof infoBox>
 
-export function InfoBox({ children, variant, size, noIcon, className, role = 'alert', heading, headingAs = 'p', 'aria-labelledby': ariaLabelledby }: InfoBoxProps) {
-  const HeadingTag = headingAs
+export function InfoBox({
+  'aria-labelledby': ariaLabelledby,
+  children,
+  className,
+  headingText,
+  headingAs = 'p',
+  noIcon,
+  role = 'alert',
+  size,
+  variant,
+  ...props
+}: InfoBoxProps) {
+  const Element = headingAs
 
   return (
-    <div className={infoBox({ variant, size, noIcon, className })} role={role} aria-labelledby={ariaLabelledby}>
+    <div
+      {...props}
+      className={infoBox({
+        variant,
+        size,
+        noIcon,
+        className,
+      })}
+      role={role}
+      aria-labelledby={ariaLabelledby}
+    >
       <div className="usa-alert__body">
-        {heading && size !== 'slim' ? <HeadingTag className="usa-alert__heading text-bold" id={ariaLabelledby}>{heading}</HeadingTag> : null}
+        {headingText && size !== 'slim'
+          ? (
+              <Element className="usa-alert__heading text-bold" id={ariaLabelledby}>
+                {headingText}
+              </Element>
+            )
+          : null}
         <div className="usa-alert__text">
           {children}
         </div>
