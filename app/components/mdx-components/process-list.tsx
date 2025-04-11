@@ -1,14 +1,8 @@
-import type { VariantProps } from 'cva'
-import { cva } from 'cva.config'
-
-const processList = cva({
-  base: 'usa-process-list',
-})
+import { cx } from 'cva.config'
 
 export type ProcessListProps = {
   children: React.ReactNode
-} & React.HTMLAttributes<HTMLOListElement> &
-VariantProps<typeof processList>
+} & React.HTMLAttributes<HTMLOListElement>
 
 export function ProcessList({
   children,
@@ -16,7 +10,7 @@ export function ProcessList({
   ...props
 }: ProcessListProps) {
   return (
-    <ol {...props} className={processList({ className })}>
+    <ol {...props} className={cx('usa-process-list', className)}>
       {children}
     </ol>
   )
@@ -29,6 +23,7 @@ export type ProcessItemProps = {
 
 export function ProcessItem({
   children,
+  className,
   headingAs = 'p',
   headingText,
   ...props
@@ -36,7 +31,7 @@ export function ProcessItem({
   const Element = headingAs
 
   return (
-    <li {...props} className="usa-process-list__item">
+    <li {...props} className={cx('usa-process-list__item', className)}>
       <Element className="usa-process-list__heading">
         {headingText}
       </Element>
