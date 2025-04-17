@@ -7,6 +7,7 @@ import {
 import { DefaultCatchBoundary } from 'app/components/DefaultCatchBoundary'
 import { NotFound } from 'app/components/NotFound'
 import * as React from 'react'
+import appCss from '~/styles/app.css?url'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -21,6 +22,7 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: 'icon', href: '/favicon.ico' },
+      { rel: 'stylesheet', href: appCss },
     ],
   }),
   errorComponent: (props) => {

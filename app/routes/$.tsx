@@ -1,23 +1,20 @@
-import { Editor } from '@monaco-editor/react'
 import { createFileRoute, Link, notFound, useNavigate } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
 import initialContent from 'app/utils/initial-content'
 import { cx } from 'cva.config'
 import * as React from 'react'
+
 import { NotFound } from '~/components/NotFound'
 import Preview from '~/components/preview'
-import appCss from '~/styles/app.css?url'
 import { createPost, getPost } from '~/utils/server-functions'
-// const Editor = React.lazy(() => import('@monaco-editor/react').then((mod) => ({ default: mod.Editor })))
+
+const MonacoEditor = React.lazy(() => import('~/components/monaco-editor').then(mod => ({
+  default: mod.default,
+})))
 
 export const Route = createFileRoute('/$')({
   component: NewPreview,
   notFoundComponent: () => <NotFound />,
-  head: () => ({
-    links: [
-      { rel: 'stylesheet', href: appCss },
-    ],
-  }),
   params: {
     stringify: (params: { publicId?: string }) => {
       return {
@@ -55,6 +52,7 @@ export const Route = createFileRoute('/$')({
 })
 
 function NewPreview() {
+  const isClient = typeof window !== 'undefined'
   const data = Route.useLoaderData()
   const [isEditorVisible, setIsEditorVisible] = React.useState(true)
   const [markdown, setMarkdown] = React.useState(data?.post?.content || initialContent)
@@ -170,26 +168,30 @@ function NewPreview() {
                 >
                   <input type="hidden" name="content" value={markdown} />
                   <div className="size-full border-r border-gray-300">
-                    <Editor
-                      className="size-full"
-                      defaultLanguage="mdx"
-                      defaultValue={markdown}
-                      onChange={(value) => {
-                        setMarkdown(value || '')
-                        if (value !== data?.post?.content) {
-                          setIsDirty(true)
-                        }
-                      }}
-                      loading={null}
-                      options={{
-                        minimap: {
-                          enabled: false,
-                        },
-                        fontSize: 14,
-                        lineHeight: 1.6,
-                        contextmenu: false,
-                      }}
-                    />
+                    {isClient
+                      ? (
+                          <MonacoEditor
+                            className="size-full"
+                            defaultLanguage="mdx"
+                            defaultValue={markdown}
+                            onChange={(value) => {
+                              setMarkdown(value || '')
+                              if (value !== data?.post?.content) {
+                                setIsDirty(true)
+                              }
+                            }}
+                            loading={null}
+                            options={{
+                              minimap: {
+                                enabled: false,
+                              },
+                              fontSize: 14,
+                              lineHeight: 1.6,
+                              contextmenu: false,
+                            }}
+                          />
+                        )
+                      : null}
                   </div>
                 </form>
               </div>
