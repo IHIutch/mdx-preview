@@ -6,6 +6,7 @@ import * as React from 'react'
 
 import { NotFound } from '~/components/NotFound'
 import Preview from '~/components/preview'
+import { compileMdx } from '~/utils/compile-mdx'
 import { createPost, getPost } from '~/utils/server-functions'
 
 const MonacoEditor = React.lazy(() => import('~/components/monaco-editor').then(mod => ({
@@ -36,6 +37,7 @@ export const Route = createFileRoute('/$')({
   loader: async ({ params }) => {
     if (!params.publicId) {
       return {
+        initialHTML: await compileMdx(initialContent),
         post: null,
       }
     }
@@ -46,16 +48,16 @@ export const Route = createFileRoute('/$')({
     }
 
     return {
+      initialHTML: await compileMdx(post.content),
       post,
     }
   },
 })
 
 function NewPreview() {
-  const isClient = typeof window !== 'undefined'
-  const data = Route.useLoaderData()
+  const { initialHTML, post } = Route.useLoaderData()
   const [isEditorVisible, setIsEditorVisible] = React.useState(true)
-  const [markdown, setMarkdown] = React.useState(data?.post?.content || initialContent)
+  const [markdown, setMarkdown] = React.useState(post?.content || initialContent)
   const [isSaving, setIsSaving] = React.useState(false)
   const [isDirty, setIsDirty] = React.useState(false)
 
@@ -168,30 +170,28 @@ function NewPreview() {
                 >
                   <input type="hidden" name="content" value={markdown} />
                   <div className="size-full border-r border-gray-300">
-                    {isClient
-                      ? (
-                          <MonacoEditor
-                            className="size-full"
-                            defaultLanguage="mdx"
-                            defaultValue={markdown}
-                            onChange={(value) => {
-                              setMarkdown(value || '')
-                              if (value !== data?.post?.content) {
-                                setIsDirty(true)
-                              }
-                            }}
-                            loading={null}
-                            options={{
-                              minimap: {
-                                enabled: false,
-                              },
-                              fontSize: 14,
-                              lineHeight: 1.6,
-                              contextmenu: false,
-                            }}
-                          />
-                        )
-                      : null}
+                    <React.Suspense fallback={<div>Loading editor...</div>}>
+                      <MonacoEditor
+                        className="size-full"
+                        defaultLanguage="mdx"
+                        defaultValue={markdown}
+                        onChange={(value) => {
+                          setMarkdown(value || '')
+                          if (value !== post?.content) {
+                            setIsDirty(true)
+                          }
+                        }}
+                        loading={null}
+                        options={{
+                          minimap: {
+                            enabled: false,
+                          },
+                          fontSize: 14,
+                          lineHeight: 1.6,
+                          contextmenu: false,
+                        }}
+                      />
+                    </React.Suspense>
                   </div>
                 </form>
               </div>
@@ -203,7 +203,9 @@ function NewPreview() {
         ])}
         >
           <div className="h-full border-l border-gray-300 bg-white relative">
-            <Preview content={markdown} />
+            <Preview content={markdown}>
+              {initialHTML}
+            </Preview>
           </div>
         </div>
       </main>

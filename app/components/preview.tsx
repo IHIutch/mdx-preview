@@ -1,3 +1,6 @@
+/* eslint-disable react-dom/no-unsafe-iframe-sandbox */
+/* eslint-disable antfu/no-import-node-modules-by-path */
+/* eslint-disable antfu/no-import-dist */
 import * as React from 'react'
 
 import { compileMdx } from '~/utils/compile-mdx'
@@ -6,7 +9,7 @@ import uswdsCss from '../../node_modules/@uswds/uswds/dist/css/uswds.css?url'
 import uswdsJsInit from '../../node_modules/@uswds/uswds/dist/js/uswds-init.js?url'
 import uswdsJs from '../../node_modules/@uswds/uswds/dist/js/uswds.js?url'
 
-export default function Preview({ content }: { content: string }) {
+export default function Preview({ content, children }: { content: string, children?: React.ReactNode }) {
   const iframeRef = React.useRef<HTMLIFrameElement | null>(null)
 
   const sendHTML = React.useCallback(async () => {
@@ -23,7 +26,6 @@ export default function Preview({ content }: { content: string }) {
   return (
     <iframe
       ref={iframeRef}
-      onLoad={sendHTML}
       sandbox="allow-scripts allow-same-origin"
       srcDoc={`<!DOCTYPE html>
                 <html lang="en">
@@ -49,7 +51,7 @@ export default function Preview({ content }: { content: string }) {
                         }
                     </script>
                 </head>
-                <body class="padding-4 usa-prose"></body>
+                <body class="padding-4 usa-prose">${children}</body>
                 <script src="${uswdsJs}"></script>
                 </html>`}
       title="MDX Preview"
