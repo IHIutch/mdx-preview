@@ -1,3 +1,4 @@
+import { useForm, useStore } from '@tanstack/react-form'
 import { createFileRoute, Link, notFound, useNavigate } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
 import initialContent from 'app/utils/initial-content'
@@ -57,14 +58,32 @@ export const Route = createFileRoute('/$')({
 function NewPreview() {
   const { initialHTML, post } = Route.useLoaderData()
   const [isEditorVisible, setIsEditorVisible] = React.useState(true)
-  const [markdown, setMarkdown] = React.useState(post?.content || initialContent)
-  const [isSaving, setIsSaving] = React.useState(false)
-  const [isDirty, setIsDirty] = React.useState(false)
 
   const handleCreatePost = useServerFn(createPost)
   const navigate = useNavigate({
     from: '/$',
   })
+
+  const form = useForm({
+    defaultValues: {
+      markdown: post?.content || initialContent,
+    },
+    onSubmit: async ({ value }) => {
+      const formData = new FormData()
+      formData.append('markdown', value.markdown)
+
+      const res = await handleCreatePost({ data: formData })
+      navigate({
+        to: '/$',
+        params: { publicId: res.publicId },
+      })
+      form.reset({
+        markdown: res.content,
+      })
+    },
+  })
+
+  const isDirty = useStore(form.store, state => state.isDirty)
 
   React.useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -117,28 +136,33 @@ function NewPreview() {
                     </>
                   )}
             </button>
-            <button
-              type="submit"
-              form="editor"
-              disabled={!isDirty}
-              className={cx('inline-flex items-center px-3 py-2 border border-blue-500 shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer relative disabled:opacity-40 disabled:cursor-not-allowed', {
-                'opacity-40': isSaving,
-              })}
-            >
-              <span className={cx({
-                invisible: isSaving,
-              })}
-              >
-                Share
-              </span>
-              {isSaving
-                ? (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="icon-[material-symbols--progress-activity] animate-spin"></span>
-                    </div>
-                  )
-                : null}
-            </button>
+            <form.Subscribe
+              selector={state => [state.isSubmitting, state.isPristine]}
+              children={([isSubmitting, isPristine]) => (
+                <button
+                  type="submit"
+                  form="editor"
+                  disabled={isPristine}
+                  className={cx('inline-flex items-center px-3 py-2 border border-blue-500 shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer relative disabled:opacity-40 disabled:cursor-not-allowed', {
+                    'opacity-40': isSubmitting,
+                  })}
+                >
+                  <span className={cx({
+                    invisible: isSubmitting,
+                  })}
+                  >
+                    Share
+                  </span>
+                  {isSubmitting
+                    ? (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="icon-[material-symbols--progress-activity] animate-spin"></span>
+                        </div>
+                      )
+                    : null}
+                </button>
+              )}
+            />
           </div>
         </div>
       </header>
@@ -153,43 +177,42 @@ function NewPreview() {
                   id="editor"
                   className="h-full"
                   method="POST"
-                  onSubmit={async (e) => {
+                  onSubmit={(e) => {
                     e.preventDefault()
-                    if (isSaving)
-                      return
-                    setIsSaving(true)
-                    const formData = new FormData(e.currentTarget)
-                    const res = await handleCreatePost({ data: formData })
-                    navigate({
-                      to: '/$',
-                      params: { publicId: res.publicId },
-                    })
-                    setIsSaving(false)
-                    setIsDirty(false)
+                    e.stopPropagation()
+                    form.handleSubmit()
                   }}
                 >
-                  <input type="hidden" name="content" value={markdown} />
+                  {/* <input type="hidden" name="content" value={markdown} /> */}
                   <div className="size-full border-r border-gray-300">
-                    <React.Suspense fallback={<div>Loading editor...</div>}>
-                      <MonacoEditor
-                        className="size-full"
-                        defaultLanguage="mdx"
-                        defaultValue={markdown}
-                        onChange={(value) => {
-                          setMarkdown(value || '')
-                          if (value !== post?.content) {
-                            setIsDirty(true)
-                          }
-                        }}
-                        loading={null}
-                        options={{
-                          minimap: {
-                            enabled: false,
-                          },
-                          fontSize: 14,
-                          lineHeight: 1.6,
-                          contextmenu: false,
-                        }}
+                    <React.Suspense fallback={(
+                      <div className="h-full flex items-center justify-center">
+                        <span className="icon-[material-symbols--progress-activity] animate-spin size-10 bg-gray-400"></span>
+                      </div>
+                    )}
+                    >
+                      <form.Field
+                        name="markdown"
+                        children={field => (
+                          <MonacoEditor
+                            {...field}
+                            className="size-full"
+                            defaultLanguage="mdx"
+                            defaultValue={field.state.value}
+                            onChange={(value) => {
+                              field.handleChange(value || '')
+                            }}
+                            loading={null}
+                            options={{
+                              minimap: {
+                                enabled: false,
+                              },
+                              fontSize: 14,
+                              lineHeight: 1.6,
+                              contextmenu: false,
+                            }}
+                          />
+                        )}
                       />
                     </React.Suspense>
                   </div>
@@ -203,9 +226,14 @@ function NewPreview() {
         ])}
         >
           <div className="h-full border-l border-gray-300 bg-white relative">
-            <Preview content={markdown}>
-              {initialHTML}
-            </Preview>
+            <form.Subscribe
+              selector={state => state.values.markdown}
+              children={markdown => (
+                <Preview content={markdown}>
+                  {initialHTML}
+                </Preview>
+              )}
+            />
           </div>
         </div>
       </main>

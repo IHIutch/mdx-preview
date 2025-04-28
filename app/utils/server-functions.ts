@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { nanoid } from 'nanoid'
+
 import { prisma } from './prisma'
 
 export const createPost = createServerFn({ method: 'POST' })
@@ -7,7 +8,7 @@ export const createPost = createServerFn({ method: 'POST' })
     if (!(formData instanceof FormData)) {
       throw new TypeError('Invalid form data')
     }
-    const content = formData.get('content')
+    const content = formData.get('markdown')
 
     if (!content) {
       throw new Error('Content is required')
