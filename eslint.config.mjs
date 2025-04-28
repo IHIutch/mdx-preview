@@ -9,6 +9,11 @@ export default antfu({
     quotes: 'single',
   },
   ignores: ['**/**.gen.*', '**/uswds/**'],
+  rules: {
+    'perfectionist/sort-imports': ['error', {
+      type: 'natural',
+    }],
+  },
 },
   // ...tailwind.configs['flat/recommended'], // Not compatible with Tailwind v4
 )
