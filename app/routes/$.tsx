@@ -1,14 +1,25 @@
+import { Menu } from '@ark-ui/react/menu'
 import { useForm, useStore } from '@tanstack/react-form'
-import { createFileRoute, Link, notFound, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, notFound, stripSearchParams, useBlocker, useNavigate } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
+import { zodValidator } from '@tanstack/zod-adapter'
 import initialContent from 'app/utils/initial-content'
 import { cx } from 'cva.config'
 import * as React from 'react'
+import { z } from 'zod'
 
 import { NotFound } from '~/components/NotFound'
 import Preview from '~/components/preview'
 import { compileMdx } from '~/utils/compile-mdx'
 import { createPost, getPost } from '~/utils/server-functions'
+
+const searchSchema = z.object({
+  show_navbar: z.boolean().default(false).optional(),
+  show_sidebar: z.boolean().default(false).optional(),
+  show_toc: z.boolean().default(false).optional(),
+})
+
+type SearchParams = z.infer<typeof searchSchema>
 
 const MonacoEditor = React.lazy(() => import('~/components/monaco-editor').then(mod => ({
   default: mod.default,
@@ -17,6 +28,18 @@ const MonacoEditor = React.lazy(() => import('~/components/monaco-editor').then(
 export const Route = createFileRoute('/$')({
   component: NewPreview,
   notFoundComponent: () => <NotFound />,
+  validateSearch: zodValidator(searchSchema),
+  shouldReload: false,
+  search: {
+    middlewares: [
+      // Removes when false
+      stripSearchParams({
+        show_navbar: false,
+        show_sidebar: false,
+        show_toc: false,
+      }),
+    ],
+  },
   params: {
     stringify: (params: { publicId?: string }) => {
       return {
@@ -57,6 +80,12 @@ export const Route = createFileRoute('/$')({
 
 function NewPreview() {
   const { post } = Route.useLoaderData()
+  const {
+    show_navbar: showNavbar,
+    show_sidebar: showSidebar,
+    show_toc: showToc,
+  } = Route.useSearch()
+
   const [isEditorVisible, setIsEditorVisible] = React.useState(true)
 
   const handleCreatePost = useServerFn(createPost)
@@ -73,27 +102,36 @@ function NewPreview() {
       formData.append('markdown', value.markdown)
 
       const res = await handleCreatePost({ data: formData })
-      await navigate({
+      form.reset({ markdown: value.markdown })
+
+      // Seems like we need to return this so "isSubmitting" resolves correctly
+      return await navigate({
         to: '/$',
         params: { publicId: res.publicId },
+        search: prev => prev,
       })
-      form.reset()
     },
   })
 
   const isDirty = useStore(form.store, state => state.isDirty)
 
-  React.useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault()
-      }
-    }
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload)
-    }
-  }, [isDirty])
+  useBlocker({
+    shouldBlockFn: () => isDirty,
+    enableBeforeUnload: isDirty,
+  })
+
+  const handleUpdateSetting = (payload: SearchParams) => {
+    navigate({
+      to: '/$',
+      params: prev => prev,
+      search: prev => ({
+        ...prev,
+        ...payload,
+      }),
+      replace: true,
+      ignoreBlocker: true,
+    })
+  }
 
   return (
     <div className="fixed inset-0 bg-gray-50 flex flex-col">
@@ -114,26 +152,83 @@ function NewPreview() {
               </Link>
             </h1>
           </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setIsEditorVisible(!isEditorVisible)}
-              className={cx('inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer')}
-            >
-              {isEditorVisible
-                ? (
-                    <>
-                      {/* <Split className="h-4 w-4 mr-2" /> */}
-                      Hide Editor
-                    </>
-                  )
-                : (
-                    <>
-                      {/* <Eye className="h-4 w-4 mr-2" /> */}
-                      Show Editor
-                    </>
-                  )}
-            </button>
+          <div className="flex gap-6">
+            <div className="flex gap-3">
+              <Menu.Root
+                closeOnSelect={false}
+                positioning={{
+                  placement: 'bottom',
+                }}
+              >
+                <Menu.Trigger className="size-10 inline-flex items-center justify-center border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
+                  <span aria-hidden className="icon-[material-symbols--settings] h-5 w-5 text-gray-600"></span>
+                  <span className="sr-only">Settings</span>
+                </Menu.Trigger>
+                <Menu.Positioner>
+                  <Menu.Content className="z-10 w-48 bg-white rounded-md shadow-lg focus:outline-none p-1 ring-1 ring-gray-200">
+                    <Menu.CheckboxItem
+                      className="flex rounded-sm items-center gap-2 px-2 h-10 cursor-pointer bg-white text-gray-900 [[data-highlighted]]:bg-gray-100"
+                      value="show_navbar"
+                      checked={Boolean(showNavbar)}
+                      onCheckedChange={(value) => {
+                        handleUpdateSetting({ show_navbar: value })
+                      }}
+                    >
+                      <div className="size-6 flex items-center justify-center">
+                        <Menu.ItemIndicator>✅</Menu.ItemIndicator>
+                      </div>
+                      <Menu.ItemText>Show Navbar</Menu.ItemText>
+                    </Menu.CheckboxItem>
+                    <Menu.CheckboxItem
+                      className="flex rounded-sm items-center gap-2 px-2 h-10 cursor-pointer bg-white text-gray-900 [[data-highlighted]]:bg-gray-100"
+                      value="show_sidebar"
+                      checked={Boolean(showSidebar)}
+                      onCheckedChange={(value) => {
+                        handleUpdateSetting({ show_sidebar: value })
+                      }}
+                    >
+                      <div className="size-6 flex items-center justify-center">
+                        <Menu.ItemIndicator>✅</Menu.ItemIndicator>
+                      </div>
+                      <Menu.ItemText>Show Sidebar</Menu.ItemText>
+                    </Menu.CheckboxItem>
+
+                    <Menu.CheckboxItem
+                      className="flex rounded-sm items-center gap-2 px-2 h-10 cursor-pointer bg-white text-gray-900 [[data-highlighted]]:bg-gray-100"
+                      value="show_toc"
+                      checked={Boolean(showToc)}
+                      onCheckedChange={(value) => {
+                        handleUpdateSetting({ show_toc: value })
+                      }}
+                    >
+                      <div className="size-6 flex items-center justify-center">
+                        <Menu.ItemIndicator>✅</Menu.ItemIndicator>
+                      </div>
+                      <Menu.ItemText>Show ToC</Menu.ItemText>
+                    </Menu.CheckboxItem>
+                  </Menu.Content>
+                </Menu.Positioner>
+              </Menu.Root>
+              <button
+                type="button"
+                onClick={() => setIsEditorVisible(!isEditorVisible)}
+                className={cx('h-10 inline-flex items-center px-3 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer')}
+              >
+                {isEditorVisible
+                  ? (
+                      <>
+                        {/* <Split className="h-4 w-4 mr-2" /> */}
+                        Hide Editor
+                      </>
+                    )
+                  : (
+                      <>
+                        {/* <Eye className="h-4 w-4 mr-2" /> */}
+                        Show Editor
+                      </>
+                    )}
+              </button>
+            </div>
             <form.Subscribe
               selector={state => [state.isSubmitting, state.isPristine]}
               children={([isSubmitting, isPristine]) => (
@@ -141,7 +236,7 @@ function NewPreview() {
                   type="submit"
                   form="editor"
                   disabled={isPristine}
-                  className={cx('inline-flex items-center px-3 py-2 border border-blue-500 shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer relative disabled:opacity-40 disabled:cursor-not-allowed', {
+                  className={cx('h-10 inline-flex items-center px-3 border border-blue-500 shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer relative disabled:opacity-40 disabled:cursor-not-allowed', {
                     'opacity-40': isSubmitting,
                   })}
                 >
