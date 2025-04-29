@@ -9,24 +9,44 @@ import { compileMdx } from '~/utils/compile-mdx'
 import uswdsCss from '../../node_modules/@uswds/uswds/dist/css/uswds.css?url'
 import uswdsJsInit from '../../node_modules/@uswds/uswds/dist/js/uswds-init.js?url'
 import uswdsJs from '../../node_modules/@uswds/uswds/dist/js/uswds.js?url'
+import uswdsHeader from '../components/uswds/header.html?raw'
+import uswdsSideNav from '../components/uswds/side-navigation.html?raw'
 
 export default function Preview({ content }: { content: string }) {
   const { initialHTML } = Route.useLoaderData()
+  const {
+    show_navbar: showNavbar,
+    show_sidebar: showSideNav,
+    // show_toc: showToc,
+  } = Route.useSearch()
+
   const iframeRef = React.useRef<HTMLIFrameElement | null>(null)
-  
+
   const sendHTML = React.useCallback(async () => {
     const markupString = await compileMdx(content)
+
     if (iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage({ html: markupString }, '*')
+      iframeRef.current.contentWindow.postMessage({
+        html: markupString,
+        showNavbar: Boolean(showNavbar),
+        showSideNav: Boolean(showSideNav),
+        // showToc: Boolean(showToc),
+      }, '*')
     }
-  }, [content])
+  }, [content, showNavbar, showSideNav])
 
   React.useEffect(() => {
     sendHTML()
   }, [sendHTML])
 
-  const memoizedHTML = React.useMemo(() => {
-    return initialHTML
+  const initialState = React.useMemo(() => {
+    return {
+      initialHTML,
+      showNavbar: Boolean(showNavbar),
+      showSideNav: Boolean(showSideNav),
+      // showToc: Boolean(showToc),
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -43,22 +63,48 @@ export default function Preview({ content }: { content: string }) {
               <link rel="stylesheet" href="${uswdsCss}" />
               <script>
                   window.addEventListener('message', (e) => {
-                      // console.log('Received message from parent:', e.data)
                       if (typeof e.data.html !== 'undefined') {
-                          setHtml(e.data.html)
+                        const content = document.getElementById('content')
+                        if (content) {
+                          content.innerHTML = e.data.html
+                        }
+                      }
+                      if (typeof e.data.showNavbar !== 'undefined') {
+                          const navbar = document.getElementById('navbar')
+                          if (navbar) {
+                              navbar.style.display = e.data.showNavbar ? 'block' : 'none'
+                          }
+                      }
+                      if (typeof e.data.showSideNav !== 'undefined') {
+                          const sidenav = document.getElementById('sidenav')
+                          if (sidenav) {
+                              sidenav.style.display = e.data.showSideNav ? 'block' : 'none'
+                          }
+                      }
+                      if (typeof e.data.showToc !== 'undefined') {
+                          const toc = document.getElementById('toc')
+                          if (toc) {
+                              toc.style.display = e.data.showToc ? 'block' : 'none'
+                          }
                       }
                   })
                   function setHtml(html) {
-                      if (typeof html === 'undefined') {
-                      document.body.innerHTML = ''
-                      } else {
-                      document.body.innerHTML = html
-                      }   
+                    const content = document.getElementById('content')
                   }
               </script>
           </head>
-          <body class="padding-4 usa-prose">${memoizedHTML}</body>
-          <script src="${uswdsJs}"></script>
+          <body>
+            <div id="navbar" class="border-bottom border-base-lighter" style="display: ${initialState.showNavbar ? 'block' : 'none'};">${uswdsHeader}</div>
+            <div class="usa-section">
+              <div class="grid-container">
+                <div class="grid-row grid-gap">
+                  <div id="sidenav" style="display: ${initialState.showSideNav ? 'block' : 'none'};" class="display-none desktop:display-block desktop:grid-col-3 order-last desktop:order-first">${uswdsSideNav}</div>
+                  <div id="content" class="desktop:grid-col usa-prose">${initialState.initialHTML}</div>
+                </div>
+              </div>
+            </div>
+            </body>
+            <script src="${uswdsJs}"></script>
           </html>`}
       title="MDX Preview"
       className="w-full h-full border-none"

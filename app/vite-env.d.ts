@@ -17,3 +17,8 @@ declare module '*.worker?worker' {
   const Worker: new () => Worker
   export default Worker
 }
+
+declare module '*.html?raw' {
+  const raw: string
+  export default raw
+}

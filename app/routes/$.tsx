@@ -1,6 +1,6 @@
 import { Menu } from '@ark-ui/react/menu'
 import { useForm, useStore } from '@tanstack/react-form'
-import { createFileRoute, Link, notFound, stripSearchParams, useBlocker, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, notFound, stripSearchParams, useNavigate } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
 import { zodValidator } from '@tanstack/zod-adapter'
 import initialContent from 'app/utils/initial-content'
@@ -83,7 +83,7 @@ function NewPreview() {
   const {
     show_navbar: showNavbar,
     show_sidebar: showSidebar,
-    show_toc: showToc,
+    // show_toc: showToc,
   } = Route.useSearch()
 
   const [isEditorVisible, setIsEditorVisible] = React.useState(true)
@@ -102,23 +102,30 @@ function NewPreview() {
       formData.append('markdown', value.markdown)
 
       const res = await handleCreatePost({ data: formData })
-      form.reset({ markdown: value.markdown })
 
-      // Seems like we need to return this so "isSubmitting" resolves correctly
-      return await navigate({
+      await navigate({
         to: '/$',
         params: { publicId: res.publicId },
         search: prev => prev,
       })
+
+      form.reset()
     },
   })
 
   const isDirty = useStore(form.store, state => state.isDirty)
 
-  useBlocker({
-    shouldBlockFn: () => isDirty,
-    enableBeforeUnload: isDirty,
-  })
+  React.useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [isDirty])
 
   const handleUpdateSetting = (payload: SearchParams) => {
     navigate({
@@ -152,48 +159,51 @@ function NewPreview() {
               </Link>
             </h1>
           </div>
-          <div className="flex gap-6">
-            <div className="flex gap-3">
-              <Menu.Root
-                closeOnSelect={false}
-                positioning={{
-                  placement: 'bottom',
-                }}
-              >
-                <Menu.Trigger className="size-10 inline-flex items-center justify-center border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
-                  <span aria-hidden className="icon-[material-symbols--settings] h-5 w-5 text-gray-600"></span>
-                  <span className="sr-only">Settings</span>
-                </Menu.Trigger>
-                <Menu.Positioner>
-                  <Menu.Content className="z-10 w-48 bg-white rounded-md shadow-lg focus:outline-none p-1 ring-1 ring-gray-200">
-                    <Menu.CheckboxItem
-                      className="flex rounded-sm items-center gap-2 px-2 h-10 cursor-pointer bg-white text-gray-900 [[data-highlighted]]:bg-gray-100"
-                      value="show_navbar"
-                      checked={Boolean(showNavbar)}
-                      onCheckedChange={(value) => {
-                        handleUpdateSetting({ show_navbar: value })
-                      }}
-                    >
-                      <div className="size-6 flex items-center justify-center">
-                        <Menu.ItemIndicator>✅</Menu.ItemIndicator>
-                      </div>
-                      <Menu.ItemText>Show Navbar</Menu.ItemText>
-                    </Menu.CheckboxItem>
-                    <Menu.CheckboxItem
-                      className="flex rounded-sm items-center gap-2 px-2 h-10 cursor-pointer bg-white text-gray-900 [[data-highlighted]]:bg-gray-100"
-                      value="show_sidebar"
-                      checked={Boolean(showSidebar)}
-                      onCheckedChange={(value) => {
-                        handleUpdateSetting({ show_sidebar: value })
-                      }}
-                    >
-                      <div className="size-6 flex items-center justify-center">
-                        <Menu.ItemIndicator>✅</Menu.ItemIndicator>
-                      </div>
-                      <Menu.ItemText>Show Sidebar</Menu.ItemText>
-                    </Menu.CheckboxItem>
+          <div className="flex gap-2">
+            <Menu.Root
+              closeOnSelect={false}
+              positioning={{
+                placement: 'bottom',
+              }}
+            >
+              <Menu.Trigger className="size-10 inline-flex items-center justify-center border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
+                <span aria-hidden className="icon-[material-symbols--settings] h-5 w-5 text-gray-600"></span>
+                <span className="sr-only">Settings</span>
+              </Menu.Trigger>
+              <Menu.Positioner>
+                <Menu.Content className="z-10 w-48 bg-white rounded-md shadow-lg focus:outline-none p-1 ring-1 ring-gray-200">
+                  <Menu.CheckboxItem
+                    className="flex rounded-sm items-center gap-2 px-2 h-10 cursor-pointer bg-white text-gray-900 [[data-highlighted]]:bg-gray-100 group"
+                    value="show_navbar"
+                    checked={Boolean(showNavbar)}
+                    onCheckedChange={(value) => {
+                      handleUpdateSetting({ show_navbar: value })
+                    }}
+                  >
+                    <div className="flex items-center justify-center size-5 border border-gray-400 rounded-sm bg-white group-[[data-state=checked]]:bg-blue-700 group-[[data-state=checked]]:border-blue-700">
+                      <Menu.ItemIndicator className="flex items-center justify-center">
+                        <span className="icon-[material-symbols--check] h-4 w-4 text-white"></span>
+                      </Menu.ItemIndicator>
+                    </div>
+                    <Menu.ItemText>Show Navbar</Menu.ItemText>
+                  </Menu.CheckboxItem>
+                  <Menu.CheckboxItem
+                    className="flex rounded-sm items-center gap-2 px-2 h-10 cursor-pointer bg-white text-gray-900 [[data-highlighted]]:bg-gray-100 group"
+                    value="show_sidebar"
+                    checked={Boolean(showSidebar)}
+                    onCheckedChange={(value) => {
+                      handleUpdateSetting({ show_sidebar: value })
+                    }}
+                  >
+                    <div className="flex items-center justify-center size-5 border border-gray-400 rounded-sm bg-white group-[[data-state=checked]]:bg-blue-700 group-[[data-state=checked]]:border-blue-700">
+                      <Menu.ItemIndicator className="flex items-center justify-center">
+                        <span className="icon-[material-symbols--check] h-4 w-4 text-white"></span>
+                      </Menu.ItemIndicator>
+                    </div>
+                    <Menu.ItemText>Show Sidebar</Menu.ItemText>
+                  </Menu.CheckboxItem>
 
-                    <Menu.CheckboxItem
+                  {/* <Menu.CheckboxItem
                       className="flex rounded-sm items-center gap-2 px-2 h-10 cursor-pointer bg-white text-gray-900 [[data-highlighted]]:bg-gray-100"
                       value="show_toc"
                       checked={Boolean(showToc)}
@@ -204,31 +214,30 @@ function NewPreview() {
                       <div className="size-6 flex items-center justify-center">
                         <Menu.ItemIndicator>✅</Menu.ItemIndicator>
                       </div>
-                      <Menu.ItemText>Show ToC</Menu.ItemText>
-                    </Menu.CheckboxItem>
-                  </Menu.Content>
-                </Menu.Positioner>
-              </Menu.Root>
-              <button
-                type="button"
-                onClick={() => setIsEditorVisible(!isEditorVisible)}
-                className={cx('h-10 inline-flex items-center px-3 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer')}
-              >
-                {isEditorVisible
-                  ? (
-                      <>
-                        {/* <Split className="h-4 w-4 mr-2" /> */}
-                        Hide Editor
-                      </>
-                    )
-                  : (
-                      <>
-                        {/* <Eye className="h-4 w-4 mr-2" /> */}
-                        Show Editor
-                      </>
-                    )}
-              </button>
-            </div>
+                      <Menu.ItemText>Show TOC</Menu.ItemText>
+                    </Menu.CheckboxItem> */}
+                </Menu.Content>
+              </Menu.Positioner>
+            </Menu.Root>
+            <button
+              type="button"
+              onClick={() => setIsEditorVisible(!isEditorVisible)}
+              className={cx('h-10 inline-flex items-center px-3 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer')}
+            >
+              {isEditorVisible
+                ? (
+                    <>
+                      {/* <Split className="h-4 w-4 mr-2" /> */}
+                      Hide Editor
+                    </>
+                  )
+                : (
+                    <>
+                      {/* <Eye className="h-4 w-4 mr-2" /> */}
+                      Show Editor
+                    </>
+                  )}
+            </button>
             <form.Subscribe
               selector={state => [state.isSubmitting, state.isPristine]}
               children={([isSubmitting, isPristine]) => (
@@ -322,7 +331,9 @@ function NewPreview() {
             <form.Subscribe
               selector={state => state}
               children={state => (
-                <Preview content={state.values.markdown} />
+                <Preview
+                  content={state.values.markdown}
+                />
               )}
             />
           </div>
