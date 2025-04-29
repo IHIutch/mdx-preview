@@ -177,7 +177,7 @@ function NewPreview() {
                 placement: 'bottom',
               }}
             >
-              <Menu.Trigger className="size-10 inline-flex items-center justify-center border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
+              <Menu.Trigger className="size-10 inline-flex items-center justify-center border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-700 cursor-pointer">
                 <span aria-hidden className="icon-[material-symbols--settings] h-5 w-5 text-gray-600"></span>
                 <span className="sr-only">Settings</span>
               </Menu.Trigger>
@@ -191,9 +191,11 @@ function NewPreview() {
                       handleUpdateSetting({ show_navbar: value })
                     }}
                   >
-                    <div className="flex items-center justify-center size-5 border border-gray-400 rounded-sm bg-white group-[[data-state=checked]]:bg-blue-700 group-[[data-state=checked]]:border-blue-700">
+                    <div className="flex items-center justify-center size-4.5 border border-gray-400 rounded-sm bg-white group-[[data-state=checked]]:bg-blue-700 group-[[data-state=checked]]:border-blue-700">
                       <Menu.ItemIndicator className="flex items-center justify-center">
-                        <span className="icon-[material-symbols--check] h-4 w-4 text-white"></span>
+                        <svg viewBox="0 0 24 24" data-state="checked" className="stroke-white stroke-3 size-3.5 fill-none [stroke-linecap:round] [stroke-linejoin:round]">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
                       </Menu.ItemIndicator>
                     </div>
                     <Menu.ItemText>Show Navbar</Menu.ItemText>
@@ -206,9 +208,11 @@ function NewPreview() {
                       handleUpdateSetting({ show_sidebar: value })
                     }}
                   >
-                    <div className="flex items-center justify-center size-5 border border-gray-400 rounded-sm bg-white group-[[data-state=checked]]:bg-blue-700 group-[[data-state=checked]]:border-blue-700">
+                    <div className="flex items-center justify-center size-4.5 border border-gray-400 rounded-sm bg-white group-[[data-state=checked]]:bg-blue-700 group-[[data-state=checked]]:border-blue-700">
                       <Menu.ItemIndicator className="flex items-center justify-center">
-                        <span className="icon-[material-symbols--check] h-4 w-4 text-white"></span>
+                        <svg viewBox="0 0 24 24" data-state="checked" className="stroke-white stroke-3 size-3.5 fill-none [stroke-linecap:round] [stroke-linejoin:round]">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
                       </Menu.ItemIndicator>
                     </div>
                     <Menu.ItemText>Show Sidebar</Menu.ItemText>
@@ -223,7 +227,11 @@ function NewPreview() {
                       }}
                     >
                       <div className="size-6 flex items-center justify-center">
-                        <Menu.ItemIndicator>✅</Menu.ItemIndicator>
+                        <Menu.ItemIndicator>
+                          <svg viewBox="0 0 24 24" data-state="checked" className="stroke-white stroke-3 size-3.5 fill-none [stroke-linecap:round] [stroke-linejoin:round]">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                        </Menu.ItemIndicator>
                       </div>
                       <Menu.ItemText>Show TOC</Menu.ItemText>
                     </Menu.CheckboxItem> */}
@@ -233,7 +241,7 @@ function NewPreview() {
             <button
               type="button"
               onClick={() => splitter.isPanelCollapsed('a') ? splitter.expandPanel('a') : splitter.collapsePanel('a')}
-              className={cx('h-10 inline-flex items-center px-3 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer')}
+              className={cx('h-10 inline-flex items-center px-3 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-700 cursor-pointer')}
             >
               {splitter.isPanelCollapsed('a')
                 ? (
@@ -256,7 +264,7 @@ function NewPreview() {
                   type="submit"
                   form="editor"
                   disabled={isPristine}
-                  className={cx('h-10 inline-flex items-center px-3 border border-blue-500 shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer relative disabled:opacity-40 disabled:cursor-not-allowed', {
+                  className={cx('h-10 inline-flex items-center px-3 border border-blue-500 shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-700 cursor-pointer relative disabled:opacity-40 disabled:cursor-not-allowed', {
                     'opacity-40': isSubmitting,
                   })}
                 >
@@ -332,7 +340,7 @@ function NewPreview() {
               </form>
             </div>
           </Splitter.Panel>
-          <Splitter.ResizeTrigger id="a:b" aria-label="Resize" className="items-center group outline-none tablet:flex h-full w-1.5 bg-gray-400 hover:bg-blue-500 [[data-focus]]:bg-blue-500 transition-colors duration-300" />
+          <Splitter.ResizeTrigger id="a:b" aria-label="Resize" className="items-center group outline-none tablet:flex h-full w-1.5 bg-gray-300 hover:bg-blue-500 hover:outline-2 [[data-focus]]:bg-blue-500 transition-colors duration-300" />
           <Splitter.Panel id="b">
             {/* Preview */}
             <div className={cx('h-full')}>
