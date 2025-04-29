@@ -1,4 +1,5 @@
 import { Menu } from '@ark-ui/react/menu'
+import { Splitter, useSplitter } from '@ark-ui/react/splitter'
 import { useForm, useStore } from '@tanstack/react-form'
 import { createFileRoute, Link, notFound, stripSearchParams, useNavigate } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
@@ -86,8 +87,6 @@ function NewPreview() {
     // show_toc: showToc,
   } = Route.useSearch()
 
-  const [isEditorVisible, setIsEditorVisible] = React.useState(true)
-
   const handleCreatePost = useServerFn(createPost)
   const navigate = useNavigate({
     from: '/$',
@@ -139,6 +138,18 @@ function NewPreview() {
       ignoreBlocker: true,
     })
   }
+
+  const splitter = useSplitter({
+    defaultSize: [50, 50],
+    panels: [{
+      id: 'a',
+      collapsible: true,
+      collapsedSize: 0,
+    }, {
+      id: 'b',
+      minSize: 25,
+    }],
+  })
 
   return (
     <div className="fixed inset-0 bg-gray-50 flex flex-col">
@@ -221,20 +232,20 @@ function NewPreview() {
             </Menu.Root>
             <button
               type="button"
-              onClick={() => setIsEditorVisible(!isEditorVisible)}
+              onClick={() => splitter.isPanelCollapsed('a') ? splitter.expandPanel('a') : splitter.collapsePanel('a')}
               className={cx('h-10 inline-flex items-center px-3 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer')}
             >
-              {isEditorVisible
+              {splitter.isPanelCollapsed('a')
                 ? (
                     <>
-                      {/* <Split className="h-4 w-4 mr-2" /> */}
-                      Hide Editor
+                      {/* <Eye className="h-4 w-4 mr-2" /> */}
+                      Show Editor
                     </>
                   )
                 : (
                     <>
-                      {/* <Eye className="h-4 w-4 mr-2" /> */}
-                      Show Editor
+                      {/* <Split className="h-4 w-4 mr-2" /> */}
+                      Hide Editor
                     </>
                   )}
             </button>
@@ -270,75 +281,75 @@ function NewPreview() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex gap-4 h-full">
-        {/* Editor */}
-        {isEditorVisible
-          ? (
-              <div className="flex-1 w-1/2">
-                <form
-                  id="editor"
-                  className="h-full"
-                  method="POST"
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    form.handleSubmit()
-                  }}
-                >
-                  {/* <input type="hidden" name="content" value={markdown} /> */}
-                  <div className="size-full border-r border-gray-300">
-                    <React.Suspense fallback={(
-                      <div className="h-full flex items-center justify-center">
-                        <span className="icon-[material-symbols--progress-activity] animate-spin size-10 bg-gray-400"></span>
-                      </div>
-                    )}
-                    >
-                      <form.Field
-                        name="markdown"
-                        children={field => (
-                          <MonacoEditor
-                            {...field}
-                            className="size-full"
-                            defaultLanguage="mdx"
-                            defaultValue={field.state.value}
-                            onChange={(value) => {
-                              field.handleChange(value || '')
-                            }}
-                            loading={null}
-                            options={{
-                              minimap: {
-                                enabled: false,
-                              },
-                              fontSize: 14,
-                              lineHeight: 1.6,
-                              contextmenu: false,
-                            }}
-                          />
-                        )}
-                      />
-                    </React.Suspense>
-                  </div>
-                </form>
-              </div>
-            )
-          : null}
-        {/* Preview */}
-        <div className={cx('flex-1', [
-          isEditorVisible ? 'w-1/2' : 'w-full',
-        ])}
-        >
-          <div className="h-full border-l border-gray-300 bg-white relative">
-            <form.Subscribe
-              selector={state => state}
-              children={state => (
-                <Preview
-                  content={state.values.markdown}
+      <Splitter.RootProvider value={splitter} asChild>
+        <main className="h-full flex">
+          <Splitter.Panel id="a">
+            {/* Editor */}
+            <div className="h-full">
+              <form
+                id="editor"
+                className="h-full"
+                method="POST"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  form.handleSubmit()
+                }}
+              >
+                {/* <input type="hidden" name="content" value={markdown} /> */}
+                <div className="size-full">
+                  <React.Suspense fallback={(
+                    <div className="h-full flex items-center justify-center">
+                      <span className="icon-[material-symbols--progress-activity] animate-spin size-10 bg-gray-400"></span>
+                    </div>
+                  )}
+                  >
+                    <form.Field
+                      name="markdown"
+                      children={field => (
+                        <MonacoEditor
+                          {...field}
+                          className="size-full"
+                          defaultLanguage="mdx"
+                          defaultValue={field.state.value}
+                          onChange={(value) => {
+                            field.handleChange(value || '')
+                          }}
+                          loading={null}
+                          options={{
+                            minimap: {
+                              enabled: false,
+                            },
+                            fontSize: 14,
+                            lineHeight: 1.6,
+                            contextmenu: false,
+                          }}
+                        />
+                      )}
+                    />
+                  </React.Suspense>
+                </div>
+              </form>
+            </div>
+          </Splitter.Panel>
+          <Splitter.ResizeTrigger id="a:b" aria-label="Resize" className="items-center group outline-none tablet:flex h-full w-1.5 bg-gray-400 hover:bg-blue-500 [[data-focus]]:bg-blue-500 transition-colors duration-300" />
+          <Splitter.Panel id="b">
+            {/* Preview */}
+            <div className={cx('h-full')}>
+              <div className="h-full bg-white relative">
+                <form.Subscribe
+                  selector={state => state}
+                  children={state => (
+                    <Preview
+                      content={state.values.markdown}
+                    />
+                  )}
                 />
-              )}
-            />
-          </div>
-        </div>
-      </main>
+              </div>
+            </div>
+          </Splitter.Panel>
+        </main>
+      </Splitter.RootProvider>
     </div>
   )
 }
