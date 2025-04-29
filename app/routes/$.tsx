@@ -56,7 +56,7 @@ export const Route = createFileRoute('/$')({
 })
 
 function NewPreview() {
-  const { initialHTML, post } = Route.useLoaderData()
+  const { post } = Route.useLoaderData()
   const [isEditorVisible, setIsEditorVisible] = React.useState(true)
 
   const handleCreatePost = useServerFn(createPost)
@@ -73,13 +73,11 @@ function NewPreview() {
       formData.append('markdown', value.markdown)
 
       const res = await handleCreatePost({ data: formData })
-      navigate({
+      await navigate({
         to: '/$',
         params: { publicId: res.publicId },
       })
-      form.reset({
-        markdown: res.content,
-      })
+      form.reset()
     },
   })
 
@@ -227,11 +225,9 @@ function NewPreview() {
         >
           <div className="h-full border-l border-gray-300 bg-white relative">
             <form.Subscribe
-              selector={state => state.values.markdown}
-              children={markdown => (
-                <Preview content={markdown}>
-                  {initialHTML}
-                </Preview>
+              selector={state => state}
+              children={state => (
+                <Preview content={state.values.markdown} />
               )}
             />
           </div>
