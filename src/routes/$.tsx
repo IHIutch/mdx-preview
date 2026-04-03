@@ -4,15 +4,14 @@ import { useForm, useStore } from '@tanstack/react-form'
 import { createFileRoute, Link, notFound, stripSearchParams, useNavigate } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
 import { zodValidator } from '@tanstack/zod-adapter'
-import initialContent from 'app/utils/initial-content'
 import { cx } from 'cva.config'
 import * as React from 'react'
+import initialContent from 'src/utils/initial-content'
 import { z } from 'zod'
 
-import { NotFound } from '~/components/NotFound'
-import Preview from '~/components/preview'
-import { compileMdx } from '~/utils/compile-mdx'
-import { createPost, getPost } from '~/utils/server-functions'
+import { NotFound } from 'src/components/NotFound'
+import Preview from 'src/components/preview'
+import { createPost, getPost } from 'src/utils/server-functions'
 
 const searchSchema = z.object({
   show_navbar: z.boolean().default(false).optional(),
@@ -22,7 +21,7 @@ const searchSchema = z.object({
 
 type SearchParams = z.infer<typeof searchSchema>
 
-const MonacoEditor = React.lazy(() => import('~/components/monaco-editor').then(mod => ({
+const SimpleEditor = React.lazy(() => import('src/components/simple-editor').then(mod => ({
   default: mod.default,
 })))
 
@@ -62,7 +61,6 @@ export const Route = createFileRoute('/$')({
   loader: async ({ params }) => {
     if (!params.publicId) {
       return {
-        initialHTML: await compileMdx(initialContent),
         post: null,
       }
     }
@@ -73,7 +71,6 @@ export const Route = createFileRoute('/$')({
     }
 
     return {
-      initialHTML: await compileMdx(post.content),
       post,
     }
   },
@@ -315,22 +312,10 @@ function NewPreview() {
                     <form.Field
                       name="markdown"
                       children={field => (
-                        <MonacoEditor
-                          {...field}
-                          className="size-full"
-                          defaultLanguage="mdx"
+                        <SimpleEditor
                           defaultValue={field.state.value}
                           onChange={(value) => {
                             field.handleChange(value || '')
-                          }}
-                          loading={null}
-                          options={{
-                            minimap: {
-                              enabled: false,
-                            },
-                            fontSize: 14,
-                            lineHeight: 1.6,
-                            contextmenu: false,
                           }}
                         />
                       )}

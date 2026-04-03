@@ -3,8 +3,8 @@
 /* eslint-disable antfu/no-import-dist */
 import * as React from 'react'
 
-import { Route } from '~/routes/$'
-import { compileMdx } from '~/utils/compile-mdx'
+import { Route } from 'src/routes/$'
+import { compileMdx } from 'src/utils/compile-mdx'
 
 import uswdsCss from '../../node_modules/@uswds/uswds/dist/css/uswds.css?url'
 import uswdsJsInit from '../../node_modules/@uswds/uswds/dist/js/uswds-init.js?url'
@@ -13,7 +13,6 @@ import uswdsHeader from '../components/uswds/header.html?raw'
 import uswdsSideNav from '../components/uswds/side-navigation.html?raw'
 
 export default function Preview({ content }: { content: string }) {
-  const { initialHTML } = Route.useLoaderData()
   const {
     show_navbar: showNavbar,
     show_sidebar: showSideNav,
@@ -41,10 +40,8 @@ export default function Preview({ content }: { content: string }) {
 
   const initialState = React.useMemo(() => {
     return {
-      initialHTML,
       showNavbar: Boolean(showNavbar),
       showSideNav: Boolean(showSideNav),
-      // showToc: Boolean(showToc),
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -99,7 +96,7 @@ export default function Preview({ content }: { content: string }) {
               <div class="grid-container">
                 <div class="grid-row grid-gap">
                   <div id="sidenav" style="display: ${initialState.showSideNav ? 'block' : 'none'};" class="display-none desktop:display-block desktop:grid-col-3 order-last desktop:order-first">${uswdsSideNav}</div>
-                  <div id="content" class="desktop:grid-col usa-prose">${initialState.initialHTML}</div>
+                  <div id="content" class="desktop:grid-col usa-prose"></div>
                 </div>
               </div>
             </div>

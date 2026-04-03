@@ -10,9 +10,7 @@ export const env = createEnv({
   server: {
     TURSO_DATABASE_URL: z.string().min(1),
     TURSO_AUTH_TOKEN: z.string().min(1),
-    // VERCEL_PROJECT_PRODUCTION_URL: z.string(),
-    // VERCEL_ENV: z.string().optional(),
-    VERCEL_URL: z.string().optional(),
+    // CF_PAGES_URL: z.string().optional(),
   },
   client: {
     // # Misc

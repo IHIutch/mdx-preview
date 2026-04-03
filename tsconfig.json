@@ -7,12 +7,12 @@
       "DOM.Iterable",
       "ES2022"
     ],
-    "baseUrl": ".",
+    "baseUrl": "./",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
       "~/*": [
-        "app/*"
+        "src/*"
       ],
       "@generated/prisma": [
         "generated/prisma/client"
