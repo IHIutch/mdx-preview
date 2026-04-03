@@ -4,7 +4,7 @@ import { nanoid } from 'nanoid'
 import { prisma } from './prisma'
 
 export const createPost = createServerFn({ method: 'POST' })
-  .validator((formData: FormData) => {
+  .inputValidator((formData: FormData) => {
     if (!(formData instanceof FormData)) {
       throw new TypeError('Invalid form data')
     }
@@ -37,7 +37,7 @@ export const createPost = createServerFn({ method: 'POST' })
   })
 
 export const updatePost = createServerFn({ method: 'POST' })
-  .validator((formData: FormData) => {
+  .inputValidator((formData: FormData) => {
     if (!(formData instanceof FormData)) {
       throw new TypeError('Invalid form data')
     }
@@ -67,7 +67,7 @@ export const updatePost = createServerFn({ method: 'POST' })
   })
 
 export const getPost = createServerFn({ method: 'GET' })
-  .validator((d: string) => d)
+  .inputValidator((d: string) => d)
   .handler(async ({ data }) => {
     const post = await prisma.post.findFirst({
       where: {
