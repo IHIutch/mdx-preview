@@ -1,6 +1,6 @@
-import process from 'node:process'
 import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
+import process from 'node:process'
 
 function prismaClientSingleton() {
   return new PrismaClient({

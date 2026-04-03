@@ -7,6 +7,7 @@ import {
 import { DefaultCatchBoundary } from 'app/components/DefaultCatchBoundary'
 import { NotFound } from 'app/components/NotFound'
 import * as React from 'react'
+
 import appCss from '~/styles/app.css?url'
 
 export const Route = createRootRoute({

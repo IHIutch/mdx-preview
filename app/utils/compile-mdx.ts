@@ -1,7 +1,13 @@
-import { compile, run } from '@mdx-js/mdx'
+import {
+  rehypeHeadingIds,
+  rehypeShiki,
+  remarkCollectImages,
+} from '@astrojs/markdown-remark'
+import { compile, nodeTypes, run } from '@mdx-js/mdx'
 import { createElement } from 'react'
 import { renderToString } from 'react-dom/server'
 import * as runtime from 'react/jsx-runtime'
+import rehypeRaw from 'rehype-raw'
 import remarkGfm from 'remark-gfm'
 import remarkSmartypants from 'remark-smartypants'
 import { AccordionItem, AccordionList } from '~/components/mdx-components/accordion'
@@ -14,7 +20,18 @@ export async function compileMdx(markdown: string) {
   try {
     const code = await compile(markdown, {
       outputFormat: 'function-body',
-      remarkPlugins: [remarkGfm, remarkSmartypants],
+      format: 'mdx',
+      remarkPlugins: [
+        remarkGfm,
+        remarkSmartypants,
+        remarkCollectImages,
+      ],
+      rehypePlugins: [
+        [rehypeRaw, { passThrough: nodeTypes }],
+        [rehypeShiki, { theme: 'github-light' }],
+        rehypeHeadingIds,
+      ],
+      elementAttributeNameCase: 'html',
     })
 
     const result = await run(code, {
