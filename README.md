@@ -1,72 +1,59 @@
-# Welcome to TanStack.com!
+# mdx-preview
 
-This site is built with TanStack Router!
+A live MDX preview editor built with TanStack Start, deployed to **Cloudflare Workers**.
 
-- [TanStack Router Docs](https://tanstack.com/router)
+## Stack
 
-It's deployed automagically with Netlify!
-
-- [Netlify](https://netlify.com/)
+- [TanStack Start](https://tanstack.com/start) + React 19, bundled by Vite with [`@cloudflare/vite-plugin`](https://developers.cloudflare.com/workers/vite-plugin/)
+- Prisma (`runtime = "cloudflare"`) talking to Postgres through [Prisma Accelerate](https://www.prisma.io/accelerate)
+- CodeMirror editor, USWDS styles
 
 ## Development
-
-From your terminal:
 
 ```sh
 pnpm install
 pnpm dev
 ```
 
-This starts your app in development mode, rebuilding assets on file changes.
+`pnpm dev` runs Vite with the Cloudflare plugin, so the server code executes in `workerd` — the same runtime as production.
 
-## Editing and previewing the docs of TanStack projects locally
+### Environment variables
 
-The documentations for all TanStack projects except for `React Charts` are hosted on [https://tanstack.com](https://tanstack.com), powered by this TanStack Router app.
-In production, the markdown doc pages are fetched from the GitHub repos of the projects, but in development they are read from the local file system.
+Server-side secrets are read from `process.env` (enabled by the `nodejs_compat` flag in `wrangler.jsonc`).
 
-Follow these steps if you want to edit the doc pages of a project (in these steps we'll assume it's [`TanStack/form`](https://github.com/tanstack/form)) and preview them locally :
+- **Local:** put them in `.dev.vars` (gitignored). At minimum:
 
-1. Create a new directory called `tanstack`.
+  ```sh
+  DATABASE_URL="prisma+postgres://..."   # Prisma Accelerate connection string
+  ```
 
-```sh
-mkdir tanstack
-```
+- **Production:** upload them as Worker secrets:
 
-2. Enter the directory and clone this repo and the repo of the project there.
+  ```sh
+  pnpm exec wrangler secret put DATABASE_URL
+  ```
 
-```sh
-cd tanstack
-git clone git@github.com:TanStack/tanstack.com.git
-git clone git@github.com:TanStack/form.git
-```
+`.env` is only used by the Prisma CLI (`prisma/prisma.config.ts` loads it via dotenv) for migrations and `prisma generate`.
 
-> [!NOTE]
-> Your `tanstack` directory should look like this:
->
-> ```
-> tanstack/
->    |
->    +-- form/
->    |
->    +-- tanstack.com/
-> ```
-
-> [!WARNING]
-> Make sure the name of the directory in your local file system matches the name of the project's repo. For example, `tanstack/form` must be cloned into `form` (this is the default) instead of `some-other-name`, because that way, the doc pages won't be found.
-
-3. Enter the `tanstack/tanstack.com` directory, install the dependencies and run the app in dev mode:
+## Database
 
 ```sh
-cd tanstack.com
-pnpm i
-# The app will run on https://localhost:3000 by default
-pnpm dev
+pnpm prisma migrate dev     # create/apply a migration
+pnpm prisma generate        # regenerate the client into ./generated/prisma
+pnpm db-tunnel              # local tunnel to Prisma Postgres
 ```
 
-4. Now you can visit http://localhost:3000/form/latest/docs/overview in the browser and see the changes you make in `tanstack/form/docs`.
+## Deploying
 
-> [!NOTE]
-> The updated pages need to be manually reloaded in the browser.
+```sh
+pnpm deploy                 # vite build && wrangler deploy
+```
 
-> [!WARNING]
-> You will need to update the `docs/config.json` file (in the project's repo) if you add a new doc page!
+Other useful commands:
+
+```sh
+pnpm build                  # build client + Worker into ./dist
+pnpm typecheck              # tsc --noEmit
+pnpm cf-typegen             # regenerate worker-configuration.d.ts from wrangler.jsonc
+pnpm exec wrangler deploy --dry-run   # verify the bundle without publishing
+```

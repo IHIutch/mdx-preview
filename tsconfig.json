@@ -7,15 +7,20 @@
       "DOM.Iterable",
       "ES2022"
     ],
-    "baseUrl": "./",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
       "~/*": [
-        "src/*"
+        "./src/*"
       ],
       "@generated/prisma": [
-        "generated/prisma/client"
+        "./generated/prisma/client"
+      ],
+      "src/*": [
+        "./src/*"
+      ],
+      "cva.config": [
+        "./cva.config.ts"
       ]
     },
     "resolveJsonModule": true,
